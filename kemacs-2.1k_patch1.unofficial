@@ -1,0 +1,5664 @@
+diff -ruN kemacs-2.1k.orig/.kemacsrc.tmpl kemacs-2.1k/.kemacsrc.tmpl
+--- kemacs-2.1k.orig/.kemacsrc.tmpl	1970-01-01 09:00:00.000000000 +0900
++++ kemacs-2.1k/.kemacsrc.tmpl	2012-11-25 00:37:11.000000000 +0900
+@@ -0,0 +1,299 @@
++;;sample .kemacsrc file
++
++;;if you can't use ^S and ^Q because of flow control...
++;bind-to-key search-forward ^\
++;bind-to-key save-file ^X^\
++;bind-to-key incremental-search ^X\
++;bind-to-key quote-character ^XQ
++
++;;some private binds
++;bind-to-key exit-recursive-edit ^^
++;bind-to-key insert-space ^C
++;bind-to-key insert-file ^XI
++;bind-to-key set-mark ^@
++;bind-to-key entab-line ^XT
++
++;set $fcode UJIS
++;set $bcode UJIS
++;set $cperiod 0
++
++set %term &env "TERM"
++!if &or &seq %term "xterm" &or &seq %term "sun" &seq %term "linux"
++	set $kanji FALSE
++!endif
++
++; ESC T¤Ç¥Á¥å¡¼¥È¥ê¥¢¥ë
++40 store-macro
++	find-file "_PREFIX_/lib/kemacs/emacs.tut"
++	set $cbufname Tutorial
++	set $cfname /dev/null
++*loop0
++	; /^[ \t]*>>/¤Ç»Ï¤Þ¤Ã¤Æ¤¤¤ë¤È¤³¤í¤òÃµ¤¹
++	; ^S¤ÎÃµº÷¥ê¥¹¥È¤Ë»Ä¤é¤Ì¤è¤¦search-forward¤ò»È¤ï¤ºÃµ¤¹
++	!if &gre $curline 40
++		; 40¹Ô°ÊÆâ¤Ë¤Ê¤±¤ì¤ÐÃæ»ß
++		beginning-of-file
++		!return
++	!endif
++	set %tmp $curline
++	set %line #Tutorial
++	!if &equ %tmp $curline
++		; ºÇ¸å¤Þ¤ÇÃµ¤·½ª¤ï¤Ã¤¿¡£Ìµ¸Â¥ë¡¼¥×²óÈò
++		beginning-of-file
++		!return
++	!endif
++*loop0sub
++	!if &les &len %line 2
++		!goto loop0
++	!endif
++	set %chr &lef %line 2
++	!if &seq %chr ">>"
++		!goto loop0fin
++	!endif
++	set %chr &lef %line 1
++	set %line &rig %line 2
++	!if &or &seq %chr " " &seq %chr "~t"
++		!goto loop0sub
++	!endif
++	!goto loop0
++*loop0fin
++	previous-line
++	beginning-of-line
++	; ¸«¤Ä¤«¤Ã¤¿¹Ô¤Ë¥«¡¼¥½¥ë¤¬¤¢¤ë
++
++	set %addsp &sub &sub $cwinlen $curline 4
++	; %addsp¹Ô¤Û¤É¶õ¤±¤ë
++	set %tmp %addsp
++*loop
++	!if &not &gre %tmp 0
++		!goto loopfin
++	!endif
++	open-line
++	set %tmp &sub %tmp 1
++	!goto loop
++*loopfin
++
++	; %addsp¤¬3¤è¤êÂç¤­¤¤¤Ê¤éÃæ¤Û¤É¤Ë¥á¥Ã¥»¡¼¥¸
++	!if &gre %addsp 3
++		set %tmp &div %addsp 2
++	*loop2
++		!if &not &gre %tmp 1
++			!goto loop2fin
++		!endif
++		next-line
++		set %tmp &sub %tmp 1
++		!goto loop2
++	*loop2fin
++		!if $kanji
++			insert-string "~t(¤³¤³¤Ï¤ï¤¶¤È¶õ¤±¤Æ¤¢¤ê¤Þ¤¹¡£"
++			insert-string "Â³¤­¤ÎÆâÍÆ¤Ï²èÌÌ²¼Êý¤Ë¤¢¤ê¤Þ¤¹¡£)"
++		!else
++			insert-string "~t(This space is left blank on purpose."
++			insert-string " Text continues below.)"
++		!endif
++	!endif
++
++	; ÊÑ¹¹¥Õ¥é¥°¤òÍî¤È¤·¤Æ½ªÎ»
++	unmark-buffer
++	beginning-of-file
++!endm
++bind-to-key execute-macro-40	M-T
++
++;; ESC E¤Ç¥³¥ó¥Ñ¥¤¥ë&¼Â¹Ô(Ã±°ì¥½¡¼¥¹¥Õ¥¡¥¤¥ë¤ÎC¥×¥í¥°¥é¥à¤Ë¸Â¤ë) (ÇÑ»ß)
++;39 store-macro
++;	set %args @"Args: "
++;	save-file
++;	!if &not &seq "" %args
++;		write-message &cat "~nArgs: " %args
++;	!endif
++;	write-message "~nCompiling...~r~n"
++;	set %args &cat " " %args
++;	set %args &cat $cfname %args
++;	shell-command &cat "exec _PREFIX_/lib/kemacs/ccg " %args 
++;!endm
++;bind-to-key execute-macro-39	M-E
++
++; »ØÄê¥Ð¥Ã¥Õ¥¡(¥Ç¥Õ¥©¥ë¥È¤Ç¥«¥ì¥ó¥È)¤Îºï½ü ¤³¤ì¤ò²þ¤á¤Æ^XK¤Ë¥Ð¥¤¥ó¥É
++39 store-macro
++	!if $kanji
++		set %tmp @"ºï½ü¤¹¤ë¥Ð¥Ã¥Õ¥¡Ì¾: "
++	!else
++		set %tmp @"Kill buffer: "
++	!endif
++	!if &seq %tmp ""	; ÆþÎÏ¤¬¶õ¤Ê¤é¸½¥Ð¥Ã¥Õ¥¡Ì¾¤Ë
++		set %tmp $cbufname
++	!endif
++
++	set %tmpi $cwinid	; ¸½¥¦¥£¥ó¥É¥¦¤ÎID
++*kbwinloop
++	!if &seq %tmp $cbufname	; ¾Ã¤½¤¦¤È¤·¤Æ¤¤¤ë¥Ð¥Ã¥Õ¥¡¤¬É½¼¨Ãæ¤Ê¤é
++		!force next-buffer	; Â¾¤Î¥Ð¥Ã¥Õ¥¡¤ËÀÚ¤êÂØ¤¨
++	!endif
++	next-window		; °Ê¾å¤ò¡¢É½¼¨Ãæ¤Î³Æ¥¦¥£¥ó¥É¥¦¤ËÂÐ¤·¤Æ¼Â»Ü
++	!if &not &equ %tmpi $cwinid
++		!goto kbwinloop
++	!endif
++
++	!force delete-buffer %tmp
++	!if &not $status
++		!if $kanji
++			write-message "Í£°ì¤Î¥Ð¥Ã¥Õ¥¡¤Ïºï½ü¤Ç¤­¤Þ¤»¤ó"
++		!else
++			write-message "Buffer is the last one"
++		!endif
++	!endif
++!endm
++bind-to-key execute-macro-39	^XK
++
++; AWK¥â¡¼¥É¤â¤É¤­
++; CMODE¤Ë¤·¤Æ¤ª¤¤¤Æ"#"¤Î¥Ð¥¤¥ó¥É¤À¤±ÊÑ¤¨¤ë¡£CMODE¤Ç¤Ï"#"¤Ï¼«Æ°Åª¤Ë¹ÔÆ¬¤Ø
++; Ìá¤Ã¤Æ¤·¤Þ¤¦(ÊÑ¹¹ÉÔÇ½)¤Î¤Ç¡¢Ã±¤Ë¼«Ê¬¤òinsert¤À¤±¤¹¤ë¥Þ¥¯¥í¤ò¤ï¤¶¤ï¤¶
++; ºî¤Ã¤Æ"#"¤Ë¥Ð¥¤¥ó¥É¡£¤³¤Î¤È¤­¡¢¥Õ¥¡¥¤¥ëÌ¾ËöÈø¤¬¡Ö.[ch]¡×¤À¤ÈËÜÍè¤Î"#"¤Î
++; Æ¯¤­¤ò1²ó¥¨¥ß¥å¥ì¡¼¥È¤·¤¿¾å¤Ç"#"¤Ø¤Î¥Ð¥¤¥ó¥É¤ò²ò½ü¤·¡¢¤Þ¤¿¥Õ¥¡¥¤¥ëÌ¾
++; ËöÈø¤¬¤½¤ì¤é°Ê³°¤Ê¤éÃ±¤Ë"#"¤Ø¤Î¥Ð¥¤¥ó¥É¤ò²ò½ü
++38 store-macro
++	insert-string "#"
++	; CMODE¤Ç¤Ê¤¤¤Ê¤éÉáÄÌ¤Î¥Ð¥¤¥ó¥É¤ËÌá¤·¤Æ½ª¤ï¤ê
++	!if &not &bmode "CMODE"
++		!goto unbind
++	!endif
++
++	; ¥Õ¥¡¥¤¥ëÌ¾ËöÈø¤¬¡Ö.awk¡×¤Ê¤é¤½¤Î¤Þ¤Þ½ªÎ»
++	!if &les 3 &len $cfname
++		!if &seq ".awk" &rig $cfname &sub &len $cfname 3
++			!return
++		!endif
++	!endif	
++
++	; ÄÌ¾ï¤ÎCMODE¡£¡Ö#¡×¤ÎÆ¯¤­¤ò1²ó¥¨¥ß¥å¥ì¡¼¥È¤Î¾åÉáÄÌ¤Î¥Ð¥¤¥ó¥É¤ËÌá¤¹
++	set %tmpx $curcol
++	backward-character ; ¡Ö#¡×1¸ÄÊ¬¥Ð¥Ã¥¯
++*searchloop
++	!if &equ $curcol 1
++		!goto topofline
++	!endif
++	backward-character
++	!if &not &or &equ $curchar 32 &equ $curchar 9
++	*normspcloop
++		!if &not &equ %tmpx $curcol
++			forward-character
++			!goto normspcloop
++		!endif
++		!goto unbind
++	!endif
++	!goto searchloop
++*topofline
++	!if &not &equ $curchar 35
++		delete-next-character
++		!goto topofline
++	!endif
++	forward-character
++*unbind
++	set %prvdiscmd $discmd
++	set $discmd FALSE
++	unbind-key "#"
++	set $discmd %prvdiscmd 
++!endm
++auto-mode-for-file CMODE "\.awk$"
++bind-to-key execute-macro-38	"#"
++
++;¡ÖESC [ ¡Ä¡×¤È¤¤¤¦¥·¡¼¥±¥ó¥¹¤òÅÇ¤¯¤¤¤¯¤Ä¤«¤Î¥Õ¥¡¥ó¥¯¥·¥ç¥ó¥­¡¼¤ò¼è¤ê°·¤¦
++37 store-macro
++	set %tmpseq &gtkey
++	!if &seq %tmpseq "["	; ESC [ [ ¡û
++		set %tmpseq &cat %tmpseq &gtkey
++		!goto gotseq
++	!endif
++	!if &or &sle %tmpseq "0" &sle "9" %tmpseq	; ESC [ ¡û
++		!goto gotseq
++	!endif
++*getseqloop
++	; ESC [ ¿ô ~	¡Ö~¡×¤Ï "~~" ¤È½ñ¤«¤Í¤Ð¤Ê¤é¤Ê¤¤¤³¤È¤ËÃí°Õ
++	set %tmpc &gtkey
++	set %tmpseq &cat %tmpseq %tmpc
++	!if &seq %tmpc "~~"
++		!goto gotseq
++	!endif
++	!if &or &sle %tmpc "0" &sle "9" %tmpc
++		!goto unsup
++	!endif
++	!goto getseqloop
++*gotseq
++	!if &seq %tmpseq "5~~"		; PgUp
++		previous-page
++		!return
++	!endif
++	!if &seq %tmpseq "6~~"		; PgDn
++		next-page
++		!return
++	!endif
++	!if &seq %tmpseq "1~~"		; Home
++		beginning-of-file
++		!return
++	!endif
++	!if &seq %tmpseq "4~~"		; End
++		end-of-file
++		!return
++	!endif
++	!if &seq %tmpseq "2~~"		; Ins
++		!if &bmode "OVER"
++			delete-mode "OVER"
++		!else
++			add-mode "OVER"
++		!endif
++		!return
++	!endif
++	!if &seq %tmpseq "3~~"		; Del
++		delete-previous-character
++		!return
++	!endif
++	!if &seq %tmpseq "A"		; Up
++		previous-line
++		!return
++	!endif
++	!if &seq %tmpseq "B"		; Down
++		next-line
++		!return
++	!endif
++	!if &seq %tmpseq "D"		; Left
++		backward-character
++		!return
++	!endif
++	!if &seq %tmpseq "C"		; Right
++		forward-character
++		!return
++	!endif
++*unsup
++	!if $kanji
++		write-message "[Ì¤ÄêµÁ¥Õ¥¡¥ó¥¯¥·¥ç¥ó¥­¡¼]"
++	!else
++		write-message "[Function key not bound]"
++	!endif
++!endm
++bind-to-key execute-macro-37	M-[
++
++; 10-key numerics etc.
++36 store-macro
++	insert-string &chr &mod $lastkey 64
++!endm
++bind-to-key execute-macro-36	M-FNw
++bind-to-key execute-macro-36	M-FNx
++bind-to-key execute-macro-36	M-FNy
++bind-to-key execute-macro-36	M-FNt
++bind-to-key execute-macro-36	M-FNu
++bind-to-key execute-macro-36	M-FNv
++bind-to-key execute-macro-36	M-FNq
++bind-to-key execute-macro-36	M-FNr
++bind-to-key execute-macro-36	M-FNs
++bind-to-key execute-macro-36	M-FNp
++bind-to-key execute-macro-36	M-FNj
++bind-to-key execute-macro-36	M-FNk
++bind-to-key execute-macro-36	M-FNm
++bind-to-key execute-macro-36	M-FNn
++bind-to-key execute-macro-36	M-FNo
++bind-to-key newline		M-FNM
++bind-to-key beginning-of-file	M-FN^@	; Home
++bind-to-key beginning-of-file	M-FNH	; Home
++bind-to-key end-of-file		M-FNX	; End
++bind-to-key end-of-file		M-FNe	; End
++bind-to-key end-of-file		M-FNF	; End
+diff -ruN kemacs-2.1k.orig/Cstrings/Cfromc.c kemacs-2.1k/Cstrings/Cfromc.c
+--- kemacs-2.1k.orig/Cstrings/Cfromc.c	1990-09-19 17:43:37.000000000 +0900
++++ kemacs-2.1k/Cstrings/Cfromc.c	2012-11-25 02:05:04.000000000 +0900
+@@ -2,18 +2,25 @@
+ #include "kanji.h"
+ #include "Cstrings.h"
+ 
++#include "../econfig.h"
++#if BSD_LEGACY
++# include <strings.h>
++#else
++# include <string.h>
++#endif
++
+ struct KS {
+     char *p;
+ };
+ 
++static int copen(), cclose(), cget();
++
+ Char *
+ Cfromc(c)
+     register char *c;
+ {
+-    char *malloc();
+     register Char *C;
+     int len;
+-    int copen(), cclose(), cget();
+     register KSTREAM *ksp;
+     struct KS ks;
+     static int blen = 0;
+@@ -32,7 +39,7 @@
+     }
+     /* the length of C is no longer than that of c */
+     ks.p = c;
+-    if ((ksp = kalloc((caddr_t)&ks, copen, cclose, cget, (int (*)())NULL, 0)) == NULL)
++    if ((ksp = kalloc((caddr_t)&ks, copen, cclose, cget, (int (*)())NULL, KS_BINMODE)) == NULL)
+ 	return NULL;
+     for (C = buf; (*C = kgetc(ksp)) != EOF; C++) ;
+     *C = '\0';
+diff -ruN kemacs-2.1k.orig/Cstrings/Makefile.Cstr kemacs-2.1k/Cstrings/Makefile.Cstr
+--- kemacs-2.1k.orig/Cstrings/Makefile.Cstr	1993-07-07 09:44:36.000000000 +0900
++++ kemacs-2.1k/Cstrings/Makefile.Cstr	2012-11-25 00:37:11.000000000 +0900
+@@ -28,13 +28,13 @@
+ LIBRARY       = Cstrings.a
+ 
+ CCFLAGS       = -O
+-CFLAGS	      = $(CCFLAGS) -I../kanji
++CFLAGS	      = $(CCFLAGS) -I../kanji $(EINCL)
+ 
+ all:		$(LIBRARY)
+ 
+ $(LIBRARY):	$(OBJS)
+ 		ar cru $(LIBRARY) $(OBJS)
+-		@-ranlib $(LIBRARY) || echo If you use systemV, no probrem.
++		@-ranlib $(LIBRARY) || echo If you use systemV, no problem.
+ 
+ clean:;		@rm -f $(OBJS)
+ 
+diff -ruN kemacs-2.1k.orig/Cstrings/cfromC_.c kemacs-2.1k/Cstrings/cfromC_.c
+--- kemacs-2.1k.orig/Cstrings/cfromC_.c	1990-09-19 17:43:38.000000000 +0900
++++ kemacs-2.1k/Cstrings/cfromC_.c	2012-11-25 02:05:11.000000000 +0900
+@@ -2,19 +2,26 @@
+ #include "kanji.h"
+ #include "Cstrings.h"
+ 
++#include "../econfig.h"
++#if BSD_LEGACY
++# include <strings.h>
++#else
++# include <string.h>
++#endif
++
+ struct KS {
+     char *buf;
+     int ptr;
+     int len;
+ };
+ 
++static int copen(), cclose(), cput();
++
+ char *
+ cfromC(C)
+     register Char *C;
+ {
+-    char *malloc();
+     int len;
+-    int copen(), cclose(), cput();
+     register KSTREAM *ksp;
+     struct KS ks;
+     static int blen = 0;
+@@ -35,7 +42,7 @@
+     ks.buf = buf;
+     ks.ptr = 0;
+     ks.len = blen;
+-    if (!(ksp = kalloc((caddr_t)&ks, copen, cclose, (int(*)())NULL, cput, 0)))
++    if (!(ksp = kalloc((caddr_t)&ks, copen, cclose, (int(*)())NULL, cput, KS_BINMODE)))
+ 	return NULL;
+     while (*C) (void)kputc(*C++, ksp);
+     (void)kputc(' ', ksp); /* reset state of stream */
+@@ -68,8 +75,6 @@
+     char *buf;
+     int len;
+ {
+-    char *realloc();
+-
+     while (id->ptr+len >= id->len)
+ 	id->buf = realloc(id->buf, (unsigned)(id->len += 256));
+     (void)strncpy(&id->buf[id->ptr], buf, len);
+diff -ruN kemacs-2.1k.orig/Makefile kemacs-2.1k/Makefile
+--- kemacs-2.1k.orig/Makefile	1993-07-07 09:46:21.000000000 +0900
++++ kemacs-2.1k/Makefile	2012-11-25 00:37:11.000000000 +0900
+@@ -3,11 +3,18 @@
+ #
+ 
+ SHELL=/bin/sh
++# CC=clang -Wno-comment # with LLVM Clang
++CC=cc
++# This value of $(CC) is used ONLY when tailoring makefile.
++# If you want to change the compiler for making kemacs itself,
++# modify mf.c instead.
+ 
+ MAKEFILE=make.file
+ CONFIG=econfig.h
+ 
+-MAKE=exec "make" $(MFLAGS)
++MAKE="make" $(MFLAGS)
++
++SED=LANG=C sed
+ 
+ all \
+ install \
+@@ -29,8 +36,14 @@
+ 	      @ echo "## Instead, modify mf.c and type" >>$@
+ 	      @ echo "##	make $(MAKEFILE)" >>$@
+ 	      @ echo "" >>$@
+-	      @ cc -E mf.c | sed -e '/^#/d' -e '/^[.	]*$$/d' >>$@
+-	      @ cat mf.dep >>$@
++		
++		if (echo ': # \'; echo exit 1) | $(CC) -E - | sh; then \
++			$(CC) -E mf.c; \
++		else \
++			$(CC) -E -P mf.c; \
++		fi | $(SED) -e '/^#/d' -e '/^[.	]*$$/d' \
++			-e 's/^ /	/' >>$@
++		cat mf.dep >>$@
+ 
+ FORCE:
+ 
+diff -ruN kemacs-2.1k.orig/Tech kemacs-2.1k/Tech
+--- kemacs-2.1k.orig/Tech	1990-09-21 21:51:50.000000000 +0900
++++ kemacs-2.1k/Tech	2012-11-25 00:37:11.000000000 +0900
+@@ -31,3 +31,4 @@
+ 	,command
+ 
+ $B>-Mh$N%P!<%8%g%s$G$O!"$3$l$i$N@)Ls$O<h$j=|$+$l$kM=Dj$G$9!#(J
++  ($B?7=PCm(J: $B$3$N@)Ls$OHs8x<0%Q%C%ABh(J5$BHG$G<h$j=|$-$^$7$?(J)
+diff -ruN kemacs-2.1k.orig/WhatsNew kemacs-2.1k/WhatsNew
+--- kemacs-2.1k.orig/WhatsNew	1990-09-21 21:51:51.000000000 +0900
++++ kemacs-2.1k/WhatsNew	2012-11-25 00:37:11.000000000 +0900
+@@ -154,7 +154,7 @@
+ 			"ROMAJI"$B!"(J"BOGUS" $B$N$$$:$l$+$G$"$k!#%;%C%H$9$k(J
+ 			$B>l9g$O!"3F!9$NJ8;zNs$O!":G=i$N0lJ8;z$N$_$GG'<1(J
+ 			$B$5$l$k!#(JJIS $B$N>l9g!"%O%$%U%s0J9_$O>JN,$G$-$k!#(J
+-	$tcode (S)	$BC<Kv$N4A;z%3!<%I!#CM$O(J $focde $B$HF1$87A<0$r;}$D!#(J
++	$tcode (S)	$BC<Kv$N4A;z%3!<%I!#CM$O(J $fcode $B$HF1$87A<0$r;}$D!#(J
+ 	$bcode (S)	$B%P%C%U%!$N%U%!%$%k!&%3!<%I!#(J
+ 	$asave (N)	$B<+F0J]B8$r9T$&>l9g$N4V3V!#%G%U%)%k%H$O(J 256 $BJ8(J
+ 			$B;z!#(JASAVE $B%b!<%I;2>H!#(J
+@@ -180,6 +180,12 @@
+ 	$bmodeline (S)	$B%P%C%U%!Kh$N%b!<%I%i%$%s$N=q<0(J
+ 	$cperiod (N)	$B%$%s%?!<%P%k!&%?%$%^$N4V3V!J%?%$%^$N9`;2>H!K(J
+ 	$time (S)	$B8=:_$N;~9o!J(Jhh:mmxx xx=pm/am$B!K(J
++    ($B0J2<?7=P$K$h$kDI2C(J)
++	$searchpat (S)	$B8=:_$NC5:w%Q%?!<%s(J($BJQ99$b2D(J)
++	$replacepat (S)	$B8=:_$NCV49%Q%?!<%s(J($BJQ99$b2D(J)
++	$cwinlen (N*)	$B%&%#%s%I%&$N=D%5%$%:(J
++	$cwintop (N*)	$B%&%#%s%I%&$N:G>e9T$N0LCV(J($BC<Kv:G>e9T$+$i2?9TL\$+(J)
++	$cwinid (N*)	$B%&%#%s%I%&$N(JID
+ 
+ $B#8!]#2!!%f!<%6Dj5AJQ?t(J
+ $B!!%f!<%6$,G$0U$KCM$r@_Dj$7$?$j;2>H$7$?$j$G$-$kJQ?t!#(J%$BJQ?tL>(J $B$N7A<0$r$7(J
+@@ -232,6 +238,10 @@
+ 	&GTKey ()		$B0lJ8;zF~NO$7!"$=$l$rCM$H$9$k(J
+ 	&RND (N)		$BM?$($i$l$?HO0O$NMp?t(J
+ 	&ABSolute (N)		$B@dBPCM(J
++    ($B0J2<?7=P$K$h$kDI2C(J)
++	&GMOde (S)		$B;XDj$7$?L>$N%0%m!<%P%k%b!<%I$,%*%s$+$I$&$+(J
++	&BMOde (S)		$B;XDj$7$?L>$N%P%C%U%!%m!<%+%k%b!<%I$,%*%s$+(J
++				$B$I$&$+(J
+ 
+ $B#8!]#5!!%^%/%mDj5A(J
+ $B!!HV9f$*$h$SL>A0$G8F$S=P$;$k%^%/%m$rDj5A$9$k$3$H$,$G$-$k!#HV9fIU$-%^%/(J
+@@ -276,6 +286,9 @@
+ 	update-modeline		$B%b!<%I%i%$%s$N99?7$r9T$&!#%b!<%I%i%$%s$K(J
+ 		$B;~9o$rI=<($5$;$F$$$k>l9g$G!"<+F099?7%*%W%7%g%s$,@_Dj$5(J
+ 		$B$l$F$$$J$$>l9g$J$I$KMQ$$$k!#(J
++	sleep-millisecs		$B0z?t$G;XDj$7$?%_%jIC$[$IDd;_!#Nc$($P!"BP(J
++		$B1~$9$k3g8L$K%+!<%=%k$rF0$+$70l;~Dd;_$7$F$^$?La$k!"$J$I$N(J
++		$BMQES$K;H$($k!#(J($B?7=P$K$h$kDI2C(J)
+ 
+ 
+ $B#1#1!%!!%U%!%$%kL>$NE83+$r9T$J$&$h$&$K$7$?!#(J
+@@ -325,6 +338,27 @@
+ $B$G%G!<%?$,=PNO$5$l$k!#%P%C%U%!$,(J BINARY $B%b!<%I$N>l9g$K$O!"FbIt%3!<%I(J
+ $B!J#1#6%S%C%H!K$N2<0L#8%S%C%H$,=PNO$5$l$k!#(J
+ 
++($B0J2<!"?7=P$K$h$kDI2C(J) 
++  $B%3!<%I7O$H$7$F$O(JUTF8$B$K$bBP1~$7$F$$$k!#C"$7!"(JUTF8$B$N$&$A(JASCII, JIS X
++0208, JIS X0201$B$GI=8=$G$-$kHO0O$K$7$+BP1~$7$F$$$J$$(J($B$b$H$b$H(Jkemacs$B<+(J
++$BBN!"FbIt%3!<%I$H$7$F(JASCII, JIS X0208, JIS X0201$B$K$h$kI=8=$r;H$C$F$$$k(J
++$B$N$G!"Jd=u4A;z!&Bh(J3/4$B?e=`4A;z$dF|K\8l0J30$NB?9q8l$K$OBP1~$7$F$$$J$$(J)$B!#(J
++$B>e=R$7$?JQ?t(J$bcode$B$d(J$fcode$B$NCM$r!V(JUTF8$B!W$K@_Dj$9$k$H!"%3!<%I7O$,(JUTF8
++$B$H$J$k!#@_Dj$O@hF,$N(J2$BJ8;z(J($B!V(JUT$B!W(J)$B$@$1$G$b$h$$$,!"F,J8;z$@$1$K$O$G$-$J(J
++$B$$(J(UJIS$B$H2r<a$5$l$k$?$a(J)$B!#(J
++  $B$^$?!"%U%!%$%k$KBP$7$F$O9TKv%3!<%I$N;XDj$*$h$S<+F0H=Dj$b9T$($k(J($B%?!<(J
++$B%_%J%k$KBP$7$F$O$G$-$J$$(J)$B!#>e=R$7$?JQ?t(J$bcode$B$d(J$fcode$B$K$*$$$F!"9TKv(J
++$B%3!<%I$N;XDj$O0J2<$N$h$&$K9T$&!#4A;z%3!<%I7O$N;XDjJ8;zNs$NA0$K(J
++
++	LF/
++	CR/
++	CRLF/
++
++$B$N$$$:$l$+$rIU2C$9$k(J($B$=$l$>$l(JL/, C/, CL/$B$HN,$7$F$b$h$$(J)$B$+!"$^$?$O2?$b(J
++$BIU2C$7$J$$(J($B$3$N>l9g$O9TKv%3!<%I$O(JLF$B$H2r<a$5$l$k(J)$B!#Nc$($P(J$bcode$B$K(J
++$B!V(JCL/J-N-A$B!W$rBeF~$9$k$H!"4A;z%3!<%I$O(JJIS-NEW-ASCII$B!"9TKv%3!<%I$O(JCRLF
++$B$H$J$k!#(J
++
+ 
+ $B#1#3!%!!%b!<%I%i%$%s$N%+%9%?%`2=(J
+ 
+diff -ruN kemacs-2.1k.orig/basic.C_ kemacs-2.1k/basic.C_
+--- kemacs-2.1k.orig/basic.C_	1990-09-21 21:51:53.000000000 +0900
++++ kemacs-2.1k/basic.C_	2012-11-25 10:44:59.000000000 +0900
+@@ -8,6 +8,9 @@
+ #include	"ecomm.h"
+ #include	"estruct.h"
+ #include	"edef.h"
++#if HAVE_SELECT
++#include	<sys/time.h>
++#endif
+ 
+ /*
+  * Move the cursor to the
+@@ -452,3 +455,37 @@
+ 	curwp->w_flag |= WFMOVE;
+ 	return (TRUE);
+ }
++
++millisleep(f, n)	/* sleep for some milliseconds (Added by N.Nide) */
++{
++	register int status;	/* status return */
++	Char arg[NSTRING];	/* buffer to hold argument */
++#if HAVE_SELECT
++	struct timeval tm;
++#endif
++
++	if(f == FALSE){
++		if(TRUE != (status = mlreply(
++#if KMSGS
++				kterminal? CSTR("$BDd;_;~4V(J($B%_%jIC(J): "):
++#endif
++				CSTR("Milliseconds to sleep: "),
++				arg, NSTRING-1))){
++			mlwrite(
++#if KMSGS
++				kterminal? CSTR("[$BCf;_$5$l$^$7$?(J]"):
++#endif
++				CSTR("[Aborted]"));
++			return(status);
++		}
++		n = stoi(arg);
++	}
++#if HAVE_SELECT
++	tm.tv_sec = n/1000;
++	tm.tv_usec = (n%1000)*1000;
++	select(0, NULL, NULL, NULL, &tm);
++#else
++	sleep(0 < n && n <= 1000 ? 1 : n/1000);
++#endif
++	return TRUE;
++}
+diff -ruN kemacs-2.1k.orig/bind.C_ kemacs-2.1k/bind.C_
+--- kemacs-2.1k.orig/bind.C_	1990-09-21 21:51:55.000000000 +0900
++++ kemacs-2.1k/bind.C_	2012-11-25 00:50:06.000000000 +0900
+@@ -9,7 +9,8 @@
+ #include	"edef.h"
+ #include	"epath.h"
+ 
+-extern int meta(), cex(), unarg(), ctrlg(); /* dummy prefix binding functions */
++extern int meta_pfx(), cex(), unarg(), ctrlg(); /* dummy prefix binding functions */
++static int unbindchar();
+ 
+ /*ARGSUSED*/
+ deskey(f, n)	/* describe the command for a certain key */
+@@ -88,7 +89,7 @@
+ 	}
+ 
+ 	/* apply control sequence if needed */
+-	if (c & CTRL) {
++	if (c & CTLFLG) {
+ 		*ptr++ = '^';
+ 	}
+ 
+@@ -237,7 +238,7 @@
+ 	}
+ 
+ 	/* get the command sequence to bind */
+-	c = getckey((kfunc == meta) || (kfunc == cex) ||
++	c = getckey((kfunc == meta_pfx) || (kfunc == cex) ||
+ 	            (kfunc == unarg) || (kfunc == ctrlg));
+ 
+ 	/* change it to something we can print as well */
+@@ -251,7 +252,7 @@
+ 	}
+ 
+ 	/* if the function is a prefix key */
+-	if (kfunc == meta || kfunc == cex ||
++	if (kfunc == meta_pfx || kfunc == cex ||
+ 	    kfunc == unarg || kfunc == ctrlg) {
+ 
+ 		/* search for an existing binding for the prefix key */
+@@ -264,7 +265,7 @@
+ 		}
+ 
+ 		/* reset the appropriate global prefix variable */
+-		if (kfunc == meta)
++		if (kfunc == meta_pfx)
+ 			metac = c;
+ 		if (kfunc == cex)
+ 			ctlxc = c;
+@@ -292,7 +293,7 @@
+ 		if (ktp >= &keytab[NBINDS]) {
+ 			mlwrite(
+ #if KMSGS
+-			    kterminal? CSTR("$BDj5AI=$,$$$C$Q$$$G$9!*(J"):
++			    kterminal? CSTR("$BDj5AI=$,$$$C$Q$$$G$9(J!"):
+ #endif
+ 			CSTR("Binding table FULL!"));
+ 			return(FALSE);
+@@ -700,12 +701,12 @@
+ 
+     /* a control char? */
+     if (*s == '^' && *(s+1) != 0) {
+-	c |= CTRL;
++	c |= CTLFLG;
+ 	++s;
+     }
+ 
+     /* make sure we are not lower case */
+-    c |= (c & CTRL && islower(*s))? CHCASE(*s): *s;
++    c |= (c & CTLFLG && isLower(*s))? CHCASE(*s): *s;
+ 
+     return(c);
+ }
+diff -ruN kemacs-2.1k.orig/ccg kemacs-2.1k/ccg
+--- kemacs-2.1k.orig/ccg	1970-01-01 09:00:00.000000000 +0900
++++ kemacs-2.1k/ccg	2012-11-25 00:37:11.000000000 +0900
+@@ -0,0 +1,41 @@
++#!/bin/sh
++# kemacs internal use (deprecated)
++# Usage: ccg [-n] filename.c [arg...]
++CCDEFAULT=cc
++
++NONEXE=false
++if [ "$1" = -n ]; then
++	NONEXE=true
++	shift
++fi
++if [ 0 -eq $# ]; then
++	echo 'Usage: ccg [-n] filename.c [arg...]' 1>&2
++	exit 255
++fi
++
++SRC="$1"; shift
++OBJ=`expr "$SRC" : '\(..*\)\.c'`
++if [ -z "$OBJ" ]; then
++	echo 'Not a C source file'. 1>&2
++	exit 255
++fi
++
++#make "$OBJ"
++case "`ls -drt \"$SRC\" \"$OBJ\" 2>/dev/null`" in
++*.c|"")
++	"${KEMACS_CC:-${CC:-$CCDEFAULT}}" "$SRC" -o "$OBJ" -lm
++	if [ 0 -ne $? ]; then
++		exit 255
++	fi
++	;;
++*)
++	echo 'Executable file is newer, compile not performed' 1>&2
++	echo '' 1>&2
++	;;
++esac
++if [ $NONEXE != true ]; then
++	if [ 0 -eq `expr X"$OBJ" : X/` ]; then
++		OBJ=./"$OBJ"
++	fi
++	"$OBJ" "$@"
++fi
+diff -ruN kemacs-2.1k.orig/display.C_ kemacs-2.1k/display.C_
+--- kemacs-2.1k.orig/display.C_	1993-07-07 10:08:09.000000000 +0900
++++ kemacs-2.1k/display.C_	2012-11-25 10:37:01.000000000 +0900
+@@ -10,14 +10,28 @@
+ #include	"estruct.h"
+ #include	"edef.h"
+ 
++#if	HAVE_STDARG
++ /* 2005/1/30 by NIDE, N.  Very old cc does not know #elif (??) */
++# define HANDLE_VARIABLE_ARGS
++#else
++#if	HAVE_VARARGS
++# define HANDLE_VARIABLE_ARGS
++#endif
++#endif
++
+ #if	CLOCK
+ # include	<signal.h>
+ #endif
+-#if	HAVE_VARARGS /* 1993/7/6 by NIDE, N. */
+-# include	<varargs.h>
++#ifdef	HANDLE_VARIABLE_ARGS
++# if	HAVE_STDARG
++#  include	<stdarg.h>
++# else
++#  include	<varargs.h>
++# endif
+ #endif
+ 
+ static Char *dummy = CSTR("");
++static updateline();
+ 
+ typedef struct	VIDEO {
+ 	int	v_flag;			/* Flags */
+@@ -58,7 +72,6 @@
+ {
+     register int i;
+     register VIDEO *vp;
+-    char *malloc();
+ 
+     TTopen();		/* open the screen */
+     TTkopen();		/* open the keyboard */
+@@ -100,10 +113,10 @@
+  */
+ vttidy()
+ {
+-    TTkclose();
+     mlerase();
+     movecursor(term.t_nrow, 0);
+     TTflush();
++    TTkclose(); /* moved from above mlerase() by N.Nide. */
+     TTclose();
+ }
+ 
+@@ -228,12 +241,12 @@
+ 	/* block ALRM while updating screen */
+ 	f = signal(SIGALRM, SIG_IGN);
+ 	t = alarm((unsigned)0);
+-	doupdate(force);
++	do_update(force);
+ 	(void)signal(SIGALRM, f);
+ 	(void)alarm(t);
+ }
+ 
+-doupdate(force)
++do_update(force)
+     int force;
+ {
+ #endif	/*CLOCK*/
+@@ -595,7 +608,7 @@
+  * character sequences; we are using VT52 functionality. Update the physical
+  * row and column variables. It does try an exploit erase to end of line.
+  */
+-updateline(row, vp1, vp2)
++static updateline(row, vp1, vp2)
+     int row;		/* row of screen to update */
+     struct VIDEO *vp1;	/* virtual screen image */
+     struct VIDEO *vp2;	/* physical screen image */
+@@ -956,8 +969,12 @@
+  * stack grows down; this assumption is made by the "++" in the argument scan
+  * loop. Set the "message line" flag TRUE.
+  */
+-#if HAVE_VARARGS /* 1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
++# if	HAVE_STDARG
++mlwrite(Char *fmt, ...)
++# else
+ mlwrite(va_alist) va_dcl
++# endif
+ #else
+ /*VARARGS1*/
+ mlwrite(fmt, arg)
+@@ -965,9 +982,13 @@
+ #endif
+ {
+     register Char c;
+-#if HAVE_VARARGS /* 1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
++# if	HAVE_STDARG
++    va_list vl;
++# else
+     va_list vl;
+     Char *fmt;
++# endif
+ #else
+     register char *ap; /* really a void pointer... */
+ #endif
+@@ -989,9 +1010,13 @@
+     }
+ 
+     movecursor(term.t_nrow, 0);
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
++# if	HAVE_STDARG
++    va_start(vl, fmt);
++# else
+     va_start(vl);
+     fmt = va_arg(vl, Char *);
++# endif
+ #else
+     ap = (char *)&arg;
+ #endif
+@@ -1006,7 +1031,7 @@
+ 	    c = *fmt++;
+ 	    switch (c) {
+ 	    case 'd':
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
+ 		mlputi(va_arg(vl, int), 10);
+ #else
+ 		mlputi(*(int *)ap, 10);
+@@ -1015,7 +1040,7 @@
+ 		break;
+ 
+ 	    case 'o':
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
+ 		mlputi(va_arg(vl, int), 8);
+ #else
+ 		mlputi(*(int *)ap,	8);
+@@ -1024,7 +1049,7 @@
+ 		break;
+ 
+ 	    case 'x':
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
+ 		mlputi(va_arg(vl, int), 16);
+ #else
+ 		mlputi(*(int *)ap, 16);
+@@ -1033,7 +1058,7 @@
+ 		break;
+ 
+ 	    case 'D':
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
+ 		mlputli(va_arg(vl, long), 10);
+ #else
+ 		mlputli(*(long *)ap, 10);
+@@ -1042,7 +1067,7 @@
+ 		break;
+ 
+ 	    case 's':
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
+ 		mlputs(va_arg(vl, Char *));
+ #else
+ 		mlputs(*(Char **)ap);
+@@ -1051,7 +1076,7 @@
+ 		break;
+ 
+ 	    case 'f':
+-#if HAVE_VARARGS /*  1993/7/6 by NIDE, N. */
++#ifdef HANDLE_VARIABLE_ARGS
+ 		mlputf(va_arg(vl, int));
+ #else
+ 		mlputf(*(int *)ap);
+@@ -1068,7 +1093,7 @@
+ 	    }
+ 	}
+     }
+-#if HAVE_VARARGS /*  1993/7/6 by sanewo */
++#ifdef HANDLE_VARIABLE_ARGS /*  1993/7/6 by sanewo */
+     va_end(vl);
+ #endif
+     /* if we can, erase to the end-of-line */
+diff -ruN kemacs-2.1k.orig/ebind.H_ kemacs-2.1k/ebind.H_
+--- kemacs-2.1k.orig/ebind.H_	1990-09-21 21:52:00.000000000 +0900
++++ kemacs-2.1k/ebind.H_	2012-11-25 00:37:11.000000000 +0900
+@@ -2,6 +2,8 @@
+ 			MicroEMACS 3.7
+ */
+ 
++#include <signal.h>	/* to see whether SIGTSTP is defined */
++
+ /*
+  * Command table.
+  * This table  is *roughly* in ASCII order, left to right across the
+@@ -9,55 +11,55 @@
+  * control-X commands.
+  */
+ KEYTAB	keytab[NBINDS] = {
+-	{CTRL|'A',		gotobol},
+-	{CTRL|'B',		backchar},
+-	{CTRL|'C',		exitrecedit},
+-	{CTRL|'D',		forwdel},
+-	{CTRL|'E',		gotoeol},
+-	{CTRL|'F',		forwchar},
+-	{CTRL|'H',		backdel},
+-	{CTRL|'I',		tab},
+-	{CTRL|'J',		indent},
+-	{CTRL|'K',		killtext},
+-	{CTRL|'L',		refresh},
+-	{CTRL|'M',		newline},
+-	{CTRL|'N',		forwline},
+-	{CTRL|'O',		openline},
+-	{CTRL|'P',		backline},
+-	{CTRL|'Q',		quote},
+-	{CTRL|'R',		backsearch},
+-	{CTRL|'S',		forwsearch},
+-	{CTRL|'T',		twiddle},
+-	{CTRL|'U',		unarg},
+-	{CTRL|'V',		forwpage},
+-	{CTRL|'W',		killregion},
+-	{CTRL|'X',		cex},
+-	{CTRL|'Y',		yank},
+-	{CTRL|'Z',		backpage},
+-	{CTRL|'[',		meta},
+-	{CTLX|CTRL|'B',		listbuffers},
+-	{CTLX|CTRL|'C',		quit},		/* Hard quit.		*/
++	{CTLFLG|'A',		gotobol},
++	{CTLFLG|'B',		backchar},
++	{CTLFLG|'C',		exitrecedit},
++	{CTLFLG|'D',		forwdel},
++	{CTLFLG|'E',		gotoeol},
++	{CTLFLG|'F',		forwchar},
++	{CTLFLG|'H',		backdel},
++	{CTLFLG|'I',		tab},
++	{CTLFLG|'J',		indent},
++	{CTLFLG|'K',		killtext},
++	{CTLFLG|'L',		refreshscr},
++	{CTLFLG|'M',		newline},
++	{CTLFLG|'N',		forwline},
++	{CTLFLG|'O',		openline},
++	{CTLFLG|'P',		backline},
++	{CTLFLG|'Q',		quote},
++	{CTLFLG|'R',		backsearch},
++	{CTLFLG|'S',		forwsearch},
++	{CTLFLG|'T',		twiddle},
++	{CTLFLG|'U',		unarg},
++	{CTLFLG|'V',		forwpage},
++	{CTLFLG|'W',		killregion},
++	{CTLFLG|'X',		cex},
++	{CTLFLG|'Y',		yank},
++	{CTLFLG|'Z',		backpage},
++	{CTLFLG|'[',		meta_pfx},
++	{CTLX|CTLFLG|'B',	listbuffers},
++	{CTLX|CTLFLG|'C',	quit},		/* Hard quit.		*/
+ #if	AEDIT
+-	{CTLX|CTRL|'D',		detab},
+-	{CTLX|CTRL|'E',		entab},
++	{CTLX|CTLFLG|'D',	detab},
++	{CTLX|CTLFLG|'E',	entab},
+ #endif
+-	{CTLX|CTRL|'F',		filefind},
+-	{CTLX|CTRL|'I',		insfile},
+-	{CTLX|CTRL|'L',		lowerregion},
+-	{CTLX|CTRL|'M',		delmode},
+-	{CTLX|CTRL|'N',		mvdnwind},
+-	{CTLX|CTRL|'O',		deblank},
+-	{CTLX|CTRL|'P',		mvupwind},
+-	{CTLX|CTRL|'R',		fileread},
+-	{CTLX|CTRL|'S',		filesave},
++	{CTLX|CTLFLG|'F',	filefind},
++	{CTLX|CTLFLG|'I',	insfile},
++	{CTLX|CTLFLG|'L',	lowerregion},
++	{CTLX|CTLFLG|'M',	delmode},
++	{CTLX|CTLFLG|'N',	mvdnwind},
++	{CTLX|CTLFLG|'O',	deblank},
++	{CTLX|CTLFLG|'P',	mvupwind},
++	{CTLX|CTLFLG|'R',	fileread},
++	{CTLX|CTLFLG|'S',	filesave},
+ #if	AEDIT
+-	{CTLX|CTRL|'T',		trim},
++	{CTLX|CTLFLG|'T',	trim},
+ #endif
+-	{CTLX|CTRL|'U',		upperregion},
+-	{CTLX|CTRL|'V',		viewfile},
+-	{CTLX|CTRL|'W',		filewrite},
+-	{CTLX|CTRL|'X',		swapmark},
+-	{CTLX|CTRL|'Z',		shrinkwind},
++	{CTLX|CTLFLG|'U',	upperregion},
++	{CTLX|CTLFLG|'V',	viewfile},
++	{CTLX|CTLFLG|'W',	filewrite},
++	{CTLX|CTLFLG|'X',	swapmark},
++	{CTLX|CTLFLG|'Z',	shrinkwind},
+ 	{CTLX|'?',		deskey},
+ 	{CTLX|'!',		spawn},
+ 	{CTLX|'@',		pipecmd},
+@@ -72,13 +74,13 @@
+ 	{CTLX|'A',		setvar},
+ 	{CTLX|'B',		usebuffer},
+ 	{CTLX|'C',		spawncli},
+-#if	BSD
++#ifdef SIGTSTP
+ 	{CTLX|'D',		bktoshell},
+ #endif
+ 	{CTLX|'E',		ctlxe},
+ 	{CTLX|'F',		setfillcol},
+ 	{CTLX|'K',		killbuffer},
+-	{CTLX|'M',		setmode},
++	{CTLX|'M',		set_mode},
+ 	{CTLX|'N',		filename},
+ 	{CTLX|'O',		nextwind},
+ 	{CTLX|'P',		prevwind},
+@@ -90,27 +92,27 @@
+ 	{CTLX|'X',		nextbuffer},
+ 	{CTLX|'Z',		enlargewind},
+ #if	WORDPRO
+-	{META|CTRL|'C',		wordcount},
++	{META|CTLFLG|'C',	wordcount},
+ #endif
+ #if	PROC
+-	{META|CTRL|'E',		execproc},
++	{META|CTLFLG|'E',	execproc},
+ #endif
+ #if	CFENCE
+-	{META|CTRL|'F',		getfence},
++	{META|CTLFLG|'F',	getfence},
+ #endif
+-	{META|CTRL|'H',		delbword},
+-	{META|CTRL|'K',		unbindkey},
+-	{META|CTRL|'L',		reposition},
+-	{META|CTRL|'M',		delgmode},
+-	{META|CTRL|'N',		namebuffer},
+-	{META|CTRL|'R',		qreplace},
+-	{META|CTRL|'S',		newsize},
+-	{META|CTRL|'T',		newwidth},
+-	{META|CTRL|'V',		scrnextup},
++	{META|CTLFLG|'H',	delbword},
++	{META|CTLFLG|'K',	unbindkey},
++	{META|CTLFLG|'L',	reposition},
++	{META|CTLFLG|'M',	delgmode},
++	{META|CTLFLG|'N',	namebuffer},
++	{META|CTLFLG|'R',	qreplace},
++	{META|CTLFLG|'S',	newsize},
++	{META|CTLFLG|'T',	newwidth},
++	{META|CTLFLG|'V',	scrnextup},
+ #if	WORDPRO
+-	{META|CTRL|'W',		killpara},
++	{META|CTLFLG|'W',	killpara},
+ #endif
+-	{META|CTRL|'Z',		scrnextdw},
++	{META|CTLFLG|'Z',	scrnextdw},
+ 	{META|' ',		setmark},
+ 	{META|'?',		help},
+ 	{META|'!',		reposition},
+@@ -138,7 +140,7 @@
+ 	{META|'Q',		fillpara},
+ #endif
+ 	{META|'R',		sreplace},
+-#if	BSD
++#ifdef SIGTSTP
+ 	{META|'S',		bktoshell},
+ #endif
+ 	{META|'U',		upperword},
+diff -ruN kemacs-2.1k.orig/ecomm.H_ kemacs-2.1k/ecomm.H_
+--- kemacs-2.1k.orig/ecomm.H_	1990-09-21 21:52:01.000000000 +0900
++++ kemacs-2.1k/ecomm.H_	2012-11-25 01:16:41.000000000 +0900
+@@ -2,19 +2,19 @@
+ #include <stdio.h>
+ 
+ /* string library header has different name */
+-#if BSD
++#if BSD_LEGACY
+ # include <strings.h>
+-#endif
+-#if USG
++#else
+ # include <string.h>
+ #endif
+ 
+ /* names of character/byte functions */
+-#if BSD
++#if BSD_LEGACY
+ # define INDEX		index
+ # define RINDEX		rindex
+-#endif
+-#if USG
++# define memcmp		bcmp
++# define memcpy(s, d, n) bcopy((d), (s), (n)) /* but bcopy() is void */
++#else
+ # define INDEX		strchr
+ # define RINDEX		strrchr
+ #endif
+diff -ruN kemacs-2.1k.orig/econfig.h kemacs-2.1k/econfig.h
+--- kemacs-2.1k.orig/econfig.h	1993-07-07 10:08:09.000000000 +0900
++++ kemacs-2.1k/econfig.h	2012-11-25 20:24:42.000000000 +0900
+@@ -1,44 +1,72 @@
++#ifndef ECONFIG
++#define ECONFIG
++
+ /*
+  * Basic configuration of kemacs.
+  * Further configurations may be done in estruct.h
+  */
+ 
+-/* OS definitions */
+-#define BSD	1			/* UNIX BSD 4.[23]	*/
+-#define USG	0			/* UNIX system V	*/
++#ifdef BSD
++#  undef BSD	/* to avoid confliction of 'BSD' definition below. (Nide) */
++#endif
+ 
++/* OS definitions */
++#define BSD		1	/* 1: BSD, 0: System V */
++#define BSD_LEGACY	0	/* old BSD (has bcopy() etc. instead
++				   of memcpy() etc.) */
+ /* compiler facility */
+ #define STRASSOK	1	/* accepts struct/union assignment? */
+ #define SHORTNAME	0	/* need short name? */
+ 
+ /* OS versions */
+-/* for BSD */
+-#define BSD_4_1	1		/* BSD 4.1 or later	*/
+-#define BSD_4_2	1		/* BSD 4.2 or later	*/
+-#define BSD_4_3	1		/* BSD 4.3 or later	*/
+-
+-#define BSD_4_2W	0		/* have SIGWINCH	*/
+-
+ /* for USG */
+-#define USG_5_4		0	/* System V R4 */
++#define USG_5_4		1	/* System V R4 (ignored under BSD) */
+ /* I do not know about USG versions very well... */
+ 
++/* Although in BSD environment, some as don't understand -R option */
++#define HAVE_AS_R	0	/* 0: no -R, 1: has -R */
++
+ /* 1993/7/6 by NIDE, N. */
+-#define HAVE_VARARGS  1               /* handle varargs */
+-#define VOID_SIGFN    0               /* 2nd arg of signal() is (void*)() */
++#define HAVE_VARARGS	1	/* handle varargs */
++#define HAVE_STDARG	1	/* handle stdarg.h; has higher priority than
++				   HAVE_VARARGS */
++#define VOID_SIGFN	1	/* 2nd arg of signal() is (void*)() */
++#define INT_SIGARG	1	/* signal handler takes an int arg */
++#define USE_STTY_CMD	0	/* use external stty command to
++				   set terminal mode */
++#define HAVE_REGEX	1	/* have POSIX regex */
++#define USE_ENVSZ	0	/* use COLUMNS and LINES environment to
++				   determine screen size */
++#define HAVE_TERMIOS	BSD	/* have termios struct and tc[sg]etattr
++				   functions. (OpenBSD2.5 needs this)
++				   default is 1 under BSD, and 0 under SysV */
++
++#define HAVE_INSTALL	BSD	/* have install command. default is 1 under
++				   BSD, and 0 under SysV */
++#define USE_GETCWD	1	/* if defined to 1, use getcwd(), and
++				   if defined to 0, use getwd() */
++#define HAVE_SELECT	1	/* use select() */
++#define HAVE_TIME_T	1	/* have time_t */
++#define MALLOC_VOIDSTAR	1	/* malloc() returns void* */
++#define USE_LANG	0	/* use LANG environment variable to set default
++				   terminal and file code */
++#define USE_STRNICMP	0	/* have strnicmp() instead of strncasecmp() */
++#define HANDLE_UTF	1	/* handle UTF-8 (need iconv) */
++#define ICONV_2ARG_CONST 0	/* 2nd arg of iconv() is const char ** */
+ 
+ /* KANJI usage */
+ #define KANJI		1		/* use KANJI feature	*/
+ 
+-/* KANJI code defaults */
++/* KANJI code defaults (pre-definition changed to KS_UJIS by N.Nide) */
+ /* if DEF_*_CODE is not defined, BINARY is assumed. */
+ /* KI/RI are only needed for JIS */
+ /* File code */
+-#define DEF_F_CODE	KS_JIS		/* JIS/UJIS/SJIS	*/
++#define DEF_F_CODE	KS_UJIS		/* JIS/UJIS/SJIS/UTF8	*/
+ #define DEF_F_KI	KS_NEWJIS	/* OLDJIS/NEWJIS	*/
+ #define DEF_F_RI	KS_ASCII	/* ROMAJI/ASCII/BOGUS	*/
++#define DEF_F_EOL	KS_LF		/* LF/CR/CRLF		*/
+ /* Terminal code */
+-#define DEF_T_CODE	KS_JIS		/* JIS/UJIS/SJIS	*/
++#define DEF_T_CODE	KS_UJIS		/* JIS/UJIS/SJIS/UTF8	*/
+ #define DEF_T_KI	KS_NEWJIS	/* OLDJIS/NEWJIS	*/
+ #define DEF_T_RI	KS_ASCII	/* ROMAJI/ASCII/BOGUS	*/
+ 
+@@ -61,35 +89,38 @@
+ /*	separately in the TERMCAP.					*/
+ /* if not defined, specifications above are used.			*/
+ 
+-/* Although in BSD environment, some as don't understand -R option */
+-#define HAVE_AS_R	0	/* 0: no -R, 1: has -R */
+-
+ /******* end of configuration *******/
+ 
+ /* maintain consistency */
+-#if BSD
+-# undef  USG
+-# define USG		0
+-# if BSD_4_3
+-#  undef  BSD_4_2
+-#  define BSD_4_2	1
+-# endif
+-# if BSD_4_2W
+-#  undef  BSD_4_2
+-#  define BSD_4_2	1
+-# endif
+-# if BSD_4_2
+-#  undef  BSD_4_1
+-#  define BSD_4_1	1
+-# endif
+-#endif /*BSD*/
+ 
+-#if USG
++#ifdef USG
++#  undef USG
++#endif
++#define USG		(!BSD)
++
++#if BSD /* force some options */
++# undef	 USG_5_4
++# define USG_5_4	0
++#else
++# undef BSD_LEGACY
++# define BSD_LEGACY	0
++#endif /*BSD*/
+ /* no idea of USG... */
+-#endif /*USG*/
++
++#if HAVE_STDARG
++# undef HAVE_VARARGS
++# define HAVE_VARARGS	0
++#endif
+ 
+ #if VOID_SIGFN
+ # define SIGRET_T void
+ #else
+ # define SIGRET_T int
+ #endif
++#if INT_SIGARG
++# define SIGARG_T(x) int x
++#else
++# define SIGARG_T(x)
++#endif
++
++#endif /* #ifdef ECONFIG */
+diff -ruN kemacs-2.1k.orig/edef.H_ kemacs-2.1k/edef.H_
+--- kemacs-2.1k.orig/edef.H_	1993-07-07 09:44:27.000000000 +0900
++++ kemacs-2.1k/edef.H_	2012-11-25 12:27:10.000000000 +0900
+@@ -14,6 +14,8 @@
+ # define tcapeeop	tcpeop
+ # define scrnextup	scnxup
+ # define scrnextdw	scnxdw
++# define matchline	mtclin
++# define matchlen	mtclen
+ # if	KANJI
+ #  define kinsoku1	kinsk1
+ #  define kinsoku2	kinsk2
+@@ -22,7 +24,18 @@
+ 
+ /* some global fuction declarations */
+ 
++#ifdef __STDC__
++# include <stdlib.h>
++# if defined(__unix__) || defined(__MACH__)
++#  include <unistd.h>
++# endif
++#else
++# ifdef MALLOC_CHARSTAR
+ char *malloc();
++# else
++void *malloc();
++# endif
++#endif
+ char *getenv();
+ Char *itoa();
+ Char *getval();
+@@ -32,13 +45,17 @@
+ Ckey ctoec();
+ Char tgetc();
+ Ckey get1key();
+-#if	BSD
++#if HAVE_REGEX
++# include <regex.h>
++#else
++# if	BSD
+ char *re_comp();
+ int re_exec();
+-#endif
+-#if	USG
++# endif
++# if	USG
+ char *regcmp();
+ char *regex();
++# endif
+ #endif
+ int getccol();	/* get current column */
+ Char *binding_list_buffer_name();
+@@ -57,6 +74,11 @@
+ Char *getclock();
+ Char *key2fname();
+ Ckey strcmd();
++#if	USE_LANG
++int langcode();
++#else
++# define langcode(x) (x)
++#endif
+ 
+ #ifdef	maindef
+ # define EXT
+@@ -137,10 +159,10 @@
+ EXT int		lbound		INIT(0);			/* leftmost column of current	*/
+ 											/* line being displayed 		*/
+ EXT int		taboff		INIT(0);			/* tab offset for display	*/
+-EXT Ckey	metac		INIT(CTRL|'[');		/* current meta character */
+-EXT Ckey	ctlxc		INIT(CTRL|'X');		/* current control X prefix char */
+-EXT Ckey	reptc		INIT(CTRL|'U');		/* current universal repeat char */
+-EXT Ckey	abortc		INIT(CTRL|'G');		/* current abort command char	*/
++EXT Ckey	metac		INIT(CTLFLG|'[');		/* current meta character */
++EXT Ckey	ctlxc		INIT(CTLFLG|'X');		/* current control X prefix char */
++EXT Ckey	reptc		INIT(CTLFLG|'U');		/* current universal repeat char */
++EXT Ckey	abortc		INIT(CTLFLG|'G');		/* current abort command char	*/
+ 
+ EXT Char	quotec		INIT(0x11);			/* quote char during mlreply() */
+ #if COLOR
+diff -ruN kemacs-2.1k.orig/efunc.H_ kemacs-2.1k/efunc.H_
+--- kemacs-2.1k.orig/efunc.H_	1990-09-21 21:52:07.000000000 +0900
++++ kemacs-2.1k/efunc.H_	2012-11-25 10:44:29.000000000 +0900
+@@ -7,6 +7,8 @@
+ 
+ */
+ 
++#include <signal.h>	/* to see whether SIGTSTP is defined */
++
+ /*	External function declarations		*/
+ 
+ extern	int	ctrlg();		/* Abort out of things		*/
+@@ -49,7 +51,7 @@
+ extern	int	usebuffer();		/* Switch a window to a buffer	*/
+ extern	int	killbuffer();		/* Make a buffer go away.	*/
+ extern	int	reposition();		/* Reposition window		*/
+-extern	int	refresh();		/* Refresh the screen		*/
++extern	int	refreshscr();		/* Refresh the screen		*/
+ extern	int	twiddle();		/* Twiddle characters		*/
+ extern	int	tab();			/* Insert tab			*/
+ extern	int	newline();		/* Insert CR-LF			*/
+@@ -74,12 +76,12 @@
+ extern	int	copyregion();		/* Copy region to kill buffer.	*/
+ extern	int	spawncli();		/* Run CLI in a subjob.		*/
+ extern	int	spawn();		/* Run a command in a subjob.	*/
+-#if	BSD
++#ifdef SIGTSTP
+ extern	int	bktoshell();		/* suspend emacs to parent shell*/
+-extern	int	rtfrmshell();		/* return from a suspended state*/
++extern SIGRET_T rtfrmshell();		/* return from a suspended state*/
+ #endif
+ extern	int	quickexit();		/* low keystroke style exit.	*/
+-extern	int	setmode();		/* set an editor mode		*/
++extern	int	set_mode();		/* set an editor mode		*/
+ extern	int	delmode();		/* delete a mode		*/
+ extern	int	gotoline();		/* go to a numbered line	*/
+ extern	int	namebuffer();		/* rename the current buffer	*/
+@@ -157,7 +159,7 @@
+ extern	int	storemac();		/* store text for macro		*/
+ extern	int	resize();		/* resize current window	*/
+ extern	int	clrmes();		/* clear the message line	*/
+-extern	int	meta();			/* meta prefix dummy function	*/
++extern	int	meta_pfx();		/* meta prefix dummy function	*/
+ extern	int	cex();			/* ^X prefix dummy function	*/
+ extern	int	unarg();		/* ^U repeat arg dummy function	*/
+ extern	int	istring();		/* insert string in text	*/
+@@ -207,6 +209,7 @@
+ extern	int	execproc();		/* execute procedure */
+ #endif
+ extern	int	updmode();		/* update modeline */
++extern	int	millisleep();		/* sleep (added by N.Nide) */
+ 
+ /*	Name to function binding table
+ 
+@@ -217,7 +220,7 @@
+ 
+ NBIND	names[] = {
+ 	{CSTR("abort-command"),		ctrlg},
+-	{CSTR("add-mode"),		setmode},
++	{CSTR("add-mode"),		set_mode},
+ 	{CSTR("add-global-mode"),	setgmode},
+ #if	APROP
+ 	{CSTR("apropos"),		apro},
+@@ -240,7 +243,7 @@
+ 	{CSTR("change-file-name"),	filename},
+ 	{CSTR("change-screen-size"),	newsize},
+ 	{CSTR("change-screen-width"),	newwidth},
+-	{CSTR("clear-and-redraw"),	refresh},
++	{CSTR("clear-and-redraw"),	refreshscr},
+ 	{CSTR("clear-kill-buffer"),	clearkill},
+ 	{CSTR("clear-message-line"),	clrmes},
+ 	{CSTR("copy-region"),		copyregion},
+@@ -352,7 +355,7 @@
+ 	{CSTR("label-function-key"),	fnclabel},
+ #endif
+ 	{CSTR("list-buffers"),		listbuffers},
+-	{CSTR("meta-prefix"),		meta},
++	{CSTR("meta-prefix"),		meta_pfx},
+ 	{CSTR("move-window-down"),	mvdnwind},
+ 	{CSTR("move-window-up"),	mvupwind},
+ 	{CSTR("name-buffer"),		namebuffer},
+@@ -407,12 +410,13 @@
+ 	{CSTR("set-mark"),		setmark},
+ 	{CSTR("shell-command"),		spawn},
+ 	{CSTR("shrink-window"),		shrinkwind},
++	{CSTR("sleep-millisecs"),	millisleep}, /* Added by N.Nide */
+ 	{CSTR("split-current-window"),	splitwind},
+ 	{CSTR("store-macro"),		storemac},
+ #if	PROC
+ 	{CSTR("store-procedure"),	storeproc},
+ #endif
+-#if	BSD
++#ifdef SIGTSTP
+ 	{CSTR("suspend-emacs"),		bktoshell},
+ #endif
+ 	{CSTR("transpose-characters"),	twiddle},
+diff -ruN kemacs-2.1k.orig/epath.H_ kemacs-2.1k/epath.H_
+--- kemacs-2.1k.orig/epath.H_	1990-09-21 21:52:19.000000000 +0900
++++ kemacs-2.1k/epath.H_	2012-11-25 00:37:11.000000000 +0900
+@@ -8,9 +8,11 @@
+ Char *pathname[] =
+ {
+ 	CSTR(".kemacsrc"),
+-	CSTR("kemacs.hlp"),
+-	CSTR("/usr/local/bin/"),	/* Don't forget last '/' */
++	CSTR("emacs.hlp"),
++	CSTR("_PREFIX_/lib/kemacs/"),		/* Don't forget last '/' */
+ 	CSTR("")
+ };
++/* In this file, `_PREFIX_' will be replaced to $(PREFIX) in mf.c
++   before compiling */
+ 
+ #define NPNAMES (sizeof(pathname)/sizeof(Char *))
+diff -ruN kemacs-2.1k.orig/estruct.H_ kemacs-2.1k/estruct.H_
+--- kemacs-2.1k.orig/estruct.H_	1990-09-21 21:52:21.000000000 +0900
++++ kemacs-2.1k/estruct.H_	2012-11-25 01:21:31.000000000 +0900
+@@ -49,8 +49,10 @@
+ /*	internal constants	*/
+ 
+ #define NBINDS	256			/* max # of bound keys		*/
+-#define NFILEN	64			/* # of bytes, file name	*/
+-#define NBUFN	32			/* # of bytes, buffer name	*/
++#define NFILEN	256			/* # of bytes, file name	*/
++				/* (original was 64; changed by N.Nide) */
++#define NBUFN	128			/* # of bytes, buffer name	*/
++				/* (original was 32; changed by N.Nide) */
+ #define NLINE	1024			/* # of bytes, line		*/
+ #define NSTRING 1024			/* # of bytes, string buffers	*/
+ #define NKBDM	256			/* # of strokes, keyboard macro */
+@@ -68,7 +70,7 @@
+ #endif
+ 
+ #define CK_FLAGS 0xffff0000		/* flags to keystrokes		*/
+-#define CTRL	0x010000		/* Control flag, or'ed in	*/
++#define CTLFLG	0x010000		/* Control flag, or'ed in	*/
+ #define META	0x020000		/* Meta flag, or'ed in		*/
+ #define CTLX	0x040000		/* ^X flag, or'ed in		*/
+ #define SPEC	0x080000		/* special key (function keys)	*/
+@@ -149,10 +151,10 @@
+  */
+ 
+ #define	DIFCASE		0x20
+-#define islower(c)	('a'<=(c)&&(c)<='z')
+-#define isupper(c)	('A'<=(c)&&(c)<='Z')
+-#define isletter(c)	(islower(c)||isupper(c))
+-#define isdigit(c)	('0'<=(c)&&(c)<='9')
++#define isLower(c)	('a'<=(c)&&(c)<='z')
++#define isUpper(c)	('A'<=(c)&&(c)<='Z')
++#define isAlpha(c)	(isLower(c)||isUpper(c))
++#define isDigit(c)	('0'<=(c)&&(c)<='9')
+ 
+ /*
+  * There is a window structure allocated for every active display window. The
+@@ -164,6 +166,7 @@
+  * character.
+  */
+ typedef struct	WINDOW {
++	int	w_id;			/* ID				*/
+ 	struct	WINDOW *w_wndp;		/* Next window			*/
+ 	struct	BUFFER *w_bufp;		/* Buffer displayed in window	*/
+ 	struct	LINE *w_linep;		/* Top line in the window	*/
+@@ -171,9 +174,9 @@
+ 	int	w_doto;			/* Byte offset for "."		*/
+ 	struct	LINE *w_markp;		/* Line containing "mark"	*/
+ 	int	w_marko;		/* Byte offset for "mark"	*/
+-	byte	w_toprow;		/* Origin 0 top row of window	*/
+-	byte	w_ntrows;		/* # of rows of text in window	*/
+-	byte	w_force;		/* If NZ, forcing row.		*/
++	int	w_toprow; /* was byte *//* Origin 0 top row of window	*/
++	int	w_ntrows; /* was byte *//* # of rows of text in window	*/
++	int	w_force;  /* was byte *//* If NZ, forcing row.		*/
+ 	byte	w_flag;			/* Flags.			*/
+ #if	COLOR
+ 	byte	w_fcolor;		/* current forground color	*/
+@@ -207,8 +210,8 @@
+ 	int	b_marko;		/* but for the "mark"		*/
+ 	struct	LINE *b_linep;		/* Link to the header LINE	*/
+ 	byte	b_active;		/* window activated flag	*/
+-	byte	b_nwnd;			/* Count of windows on buffer	*/
+ 	byte	b_flag;			/* Flags			*/
++	int	b_nwnd; /* was byte */	/* Count of windows on buffer	*/
+ 	int	b_mode;			/* editor mode of this buffer	*/
+ 	Char	*b_fname;		/* File name			*/
+ 	Char	*b_bname;		/* Buffer name			*/
+diff -ruN kemacs-2.1k.orig/eval.C_ kemacs-2.1k/eval.C_
+--- kemacs-2.1k.orig/eval.C_	1990-09-21 21:52:22.000000000 +0900
++++ kemacs-2.1k/eval.C_	2012-11-25 00:53:54.000000000 +0900
+@@ -13,6 +13,11 @@
+ #include	"edef.h"
+ #include	"evar.h"
+ 
++#define	EV_ADR(evp) /* ENVAR *evp; */ (\
++	evp->ev_class == EV_BLOCAL ? BUF_ADR(evp->ev_addr) : \
++	evp->ev_class == EV_WLOCAL ? WIN_ADR(evp->ev_addr) : \
++		evp->ev_addr)
++
+ varinit()		/* initialize the user variable list */
+ {
+ 	register int i;
+@@ -95,7 +100,8 @@
+ 	case UFOR:	return(ltos(stol(arg1) || stol(arg2)));
+ 	case UFUPPER:	return(mkupper(arg1));
+ 	case UFLOWER:	return(mklower(arg1));
+-	case UFTRUTH:	return(ltos(stoi(arg1) == 42));
++     /*	case UFTRUTH:	return(ltos(stoi(arg1) == 42)); */ /* ?? Nide */
++	case UFTRUTH:	return(ltos(stoi(arg1) != 0));
+ 	case UFASCII:	return(itoa((int)arg1[0]));
+ 	case UFCHR:	result[0] = stoi(arg1);
+ 			result[1] = 0;
+@@ -113,6 +119,19 @@
+ 		    return errorm;
+ 		return Cstrcpy(result, p);
+ 	    }
++
++	case UFBMODE:
++	case UFGMODE:
++	    {
++		int i;
++		
++		(void)mkupper(arg1);
++		for(i = 0; modename[i] != NULL; i++)
++			if(Cstrcmp(modename[i], arg1) == 0)
++				return ltos((i << i) & (fnum == UFGMODE ?
++					gmode : curwp->w_bufp->b_mode));
++		return errorm;
++	    }
+ 	}
+ 
+ 	exit(-11);	/* never should get here */
+@@ -147,7 +166,8 @@
+ 	/* scan the list, looking for the referenced name */
+ 	for (evp = envars; evp < envars+NEVARS; evp++) {
+ 		if (Cstrcmp(vname, evp->ev_name) == 0)
+-			return (*evp->ev_gethook)(evp);
++			return *evp->ev_gethook ? (*evp->ev_gethook)(evp) :
++				(Char *)evp->ev_addr;
+ 	}
+ 
+ 	/* return errorm on a bad reference */
+@@ -170,18 +190,14 @@
+ get_int_hook(evp)
+ 	register ENVAR *evp;
+ {
+-	if (evp->ev_class != EV_LOCAL)
+-		return itoa(*((int *)evp->ev_addr));
+-	return itoa(*((int *)BUF_ADR(evp->ev_addr)));
++	return itoa(*((int *)EV_ADR(evp)));
+ }
+ 
+ static Char *
+ get_bool_hook(evp)
+ 	register ENVAR *evp;
+ {
+-	if (evp->ev_class != EV_LOCAL)
+-		return ltos(*((bool *)evp->ev_addr));
+-	return ltos(*((bool *)BUF_ADR(evp->ev_addr)));
++	return ltos(*((bool *)EV_ADR(evp)));
+ }
+ 
+ static Char *
+@@ -190,9 +206,7 @@
+ {
+ 	register Char *p;
+ 
+-	p = (evp->ev_class != EV_LOCAL)?
+-		*((Char **)evp->ev_addr):
+-		*((Char **)BUF_ADR(evp->ev_addr));
++	p = *((Char **)EV_ADR(evp));
+ 	return (!p? CSTR(""): p);
+ }
+ 
+@@ -201,10 +215,7 @@
+ 	register ENVAR *evp;
+ 	Char *val;
+ {
+-	if (evp->ev_class != EV_LOCAL)
+-		*((int *)evp->ev_addr) = stoi(val);
+-	else
+-		*((int *)BUF_ADR(evp->ev_addr)) = stoi(val);
++	*((int *)EV_ADR(evp)) = stoi(val);
+ 	return(TRUE);
+ }
+ 
+@@ -213,10 +224,7 @@
+ 	register ENVAR *evp;
+ 	Char *val;
+ {
+-	if (evp->ev_class != EV_LOCAL)
+-		*((bool *)evp->ev_addr) = stol(val);
+-	else
+-		*((bool *)BUF_ADR(evp->ev_addr)) = stol(val);
++	*((bool *)EV_ADR(evp)) = stol(val);
+ 	return(TRUE);
+ }
+ 
+@@ -225,13 +233,7 @@
+ 	register ENVAR *evp;
+ 	Char *val;
+ {
+-	register Char **p;
+-
+-	if (evp->ev_class != EV_LOCAL)
+-		p = (Char **)evp->ev_addr;
+-	else
+-		p = (Char **)BUF_ADR(evp->ev_addr);
+-	return copystr(p, val);
++	return copystr((Char **)EV_ADR(evp), val);
+ }
+ 
+ /*ARGSUSED*/
+@@ -340,9 +342,7 @@
+ get_kcode_hook(evp)
+      register ENVAR *evp;
+ {
+-	if (evp->ev_class != EV_LOCAL)
+-		return code_string(*(KS_FLAG *)evp->ev_addr);
+-	return code_string(*(KS_FLAG *)BUF_ADR(evp->ev_addr));
++	return code_string(*(KS_FLAG *)EV_ADR(evp));
+ }
+ 
+ static int
+@@ -350,10 +350,7 @@
+      register ENVAR *evp;
+      register Char *val;
+ {
+-	if (evp->ev_class != EV_LOCAL)
+-		string_code(val, (KS_FLAG *)evp->ev_addr);
+-	else
+-		string_code(val, (KS_FLAG *)BUF_ADR(evp->ev_addr));
++	string_code(val, (KS_FLAG *)EV_ADR(evp));
+ 	return (TRUE);
+ }
+ 
+@@ -406,6 +403,7 @@
+ 		(void)linsert(1, c);
+ }
+ 
++static int
+ put_modeline_hook(evp, val)
+ 	register ENVAR *evp;
+ 	register Char *val;
+@@ -525,7 +523,8 @@
+ 		break;
+ 
+ 	case TKENV: /* set an environment variable */
+-		status = (*evp->ev_puthook)(evp, val);
++		status = *evp->ev_puthook ? (*evp->ev_puthook)(evp, val) :
++			NULL != Cstrcpy(evp->ev_addr, val);
+ 		break;
+ 	}
+ 	thisflag = lastflag;	/* "set" should not affect goal column. */
+@@ -559,7 +558,7 @@
+ 
+ 	/* scan digits, build value */
+ 	while ((c = *st++)) {
+-	  if (isdigit(c))
++	  if (isDigit(c))
+ 	    result = result * 10 + c - '0';
+ 	  else
+ 	    return(0);
+@@ -620,7 +619,7 @@
+ 		return(TKNUL);
+ 
+ 	/* a numeric literal? */
+-	if (isdigit(c))
++	if (isDigit(c))
+ 		return(TKLIT);
+ 
+ 	switch (c) {
+@@ -749,11 +748,26 @@
+ code_string(code)
+      KS_FLAG code;
+ {
+-  static Char b[16];
++  static Char b[20]; /* max: CRLF/JIS-NEW-ROMAJI */
++
++  switch (KS_EOL(code)) { /* Added by Nide */
++  case KS_LF:
++    b[0] = 0;
++    break;
++  case KS_CR:
++    (void)Cstrcpy(b, CSTR("CR/"));
++    break;
++  case KS_CRLF:
++    (void)Cstrcpy(b, CSTR("CRLF/"));
++    break;
++  default:
++    (void)Cstrcpy(b, CSTR("???/"));
++    break;
++  }
+ 
+   switch (KS_CODE(code)) {
+   case KS_JIS:
+-    (void)Cstrcpy(b, CSTR("JIS"));
++    (void)Cstrcat(b, CSTR("JIS"));
+     switch (KS_KI(code)) {
+     case KS_NEWJIS:
+       (void)Cstrcat(b, CSTR("-NEW"));
+@@ -779,25 +793,53 @@
+       (void)Cstrcat(b, CSTR("-???"));
+       break;
+     }
+-    return b;
++    break;
+   case KS_UJIS:
+-    return CSTR("UJIS");
++    (void)Cstrcat(b, CSTR("UJIS"));
++    break;
+   case KS_SJIS:
+-    return CSTR("SJIS");
++    (void)Cstrcat(b, CSTR("SJIS"));
++    break;
++#if HANDLE_UTF
++  case KS_UTF8:
++    (void)Cstrcat(b, CSTR("UTF8"));
++    break;
++#endif
++  default:
++    (void)Cstrcat(b, CSTR("???"));
++    break;
+   }
+-  return CSTR("???");
++  return b;
+ }
+ 
+ string_code(str, code)
+      Char *str;		/* code specifying string */
+      KS_FLAG *code;	/* default value of code */
+ {
+-  register Char *p;
++  register Char *p, *q;
++
++  if(p = Cindex(str, '/'), p++ == NULL){ /* Added by Nide */
++    p = str;
++    KS_EOL(*code) = KS_LF;
++  } else switch (*str) {
++  case 'L': case 'l': /* "LF/" case */
++    KS_EOL(*code) = KS_LF;
++    break;
++  case 'C': case 'c': /* "CR/" or "CRLF/" case */
++    KS_EOL(*code) = KS_CR;
++    for(q = str+1; q < p; q++){
++      if(*q == 'L' || *q == 'l'){
++	KS_EOL(*code) = KS_CRLF;
++	break;
++      }
++    }
++    break;
++  }
+ 
+-  switch (*str) {
++  switch (*p) {
+   case 'j': case 'J':
+     KS_CODE(*code) = KS_JIS;
+-    if ((p = Cindex(str, '-')) == NULL) return;
++    if ((p = Cindex(p, '-')) == NULL) return;
+     switch (*++p) {
+     case 'n': case 'N':
+       KS_KI(*code) = KS_NEWJIS;
+@@ -806,7 +848,7 @@
+       KS_KI(*code) = KS_OLDJIS;
+       break;
+     }
+-    if ((p = Cindex(str = p, '-')) == NULL) return;
++    if ((p = Cindex(p, '-')) == NULL) return;
+     switch (*++p) {
+     case 'r': case 'R':
+       KS_RI(*code) = KS_ROMAJI;
+@@ -820,7 +862,16 @@
+     }
+     return;
+   case 'u': case 'U':
+-    KS_CODE(*code) = KS_UJIS;
++    switch (*++p) {
++    case 't': case 'T':
++#if HANDLE_UTF
++      KS_CODE(*code) = KS_UTF8;
++      break;
++#endif
++    default:
++      KS_CODE(*code) = KS_UJIS;
++      break;
++    }
+     return;
+   case 's': case 'S':
+     KS_CODE(*code) = KS_SJIS;
+@@ -839,7 +890,7 @@
+ 
+ 	sp = str;
+ 	while (*sp) {
+-		if (islower(*sp)) *sp ^= DIFCASE;
++		if (isLower(*sp)) *sp ^= DIFCASE;
+ 		++sp;
+ 	}
+ 	return(str);
+@@ -854,7 +905,7 @@
+ 
+   sp = str;
+   while (*sp) {
+-    if (isupper(*sp))
++    if (isUpper(*sp))
+       *sp ^= DIFCASE;
+     ++sp;
+   }
+diff -ruN kemacs-2.1k.orig/evar.H_ kemacs-2.1k/evar.H_
+--- kemacs-2.1k.orig/evar.H_	1993-07-07 09:44:28.000000000 +0900
++++ kemacs-2.1k/evar.H_	2012-11-25 10:52:42.000000000 +0900
+@@ -27,20 +27,28 @@
+ 	int (*ev_puthook)();		/* routine to put the value */
+ } ENVAR;
+ 
+-#define EV_LOCAL	0
+-#define EV_GLOBAL	1
+-
+-static BUFFER dummy_buffer;
+-
+-#define BUF_OFS(f)	(char *)&dummy_buffer.f
+-#define BUF_ADR(o)	((char *)curbp+((char *)o-(char *)&dummy_buffer))
++#define EV_BLOCAL	0	/* env variable is buffer local */
++#define EV_WLOCAL	1	/* env variable is window local */
++#define EV_GLOBAL	2	/* env variable is global */
++
++static union {
++	BUFFER buffer;
++	WINDOW window;
++} dummy_str;
++#define dummy_bptr	(&(dummy_str.buffer))
++#define dummy_wptr	(&(dummy_str.window))
++
++#define BUF_OFS(f)	(char *)&(dummy_bptr->f)
++#define BUF_ADR(o)	((char *)curbp+((char *)o-(char *)dummy_bptr))
++#define WIN_OFS(f)	(char *)&(dummy_wptr->f)
++#define WIN_ADR(o)	((char *)curwp+((char *)o-(char *)dummy_wptr))
+ 
+ #if	SHORTNAME
+-# define get_curchar_hook	get_cchr_hook
++# define get_curchar_hook	get_cuch_hook
+ # define get_curcol_hook	get_ccol_hook
+ # define get_curline_hook	get_clin_hook
+ # define get_curwidth_hook	get_cwid_hook
+-# define put_curchar_hook	put_cchr_hook
++# define put_curchar_hook	put_cuch_hook
+ # define put_curcol_hook	put_ccol_hook
+ # define put_curline_hook	put_clin_hook
+ # define put_curwidth_hook	put_cwid_hook
+@@ -53,28 +61,28 @@
+  *	int put_hook(ENVAR *, Char *);
+  */
+ /* hook for putting to readonly variables */
+-int readonly_hook();
++static int readonly_hook();
+ /* general get hooks */
+-Char *get_int_hook(), *get_bool_hook(), *get_str_hook();
++static Char *get_int_hook(), *get_bool_hook(), *get_str_hook();
+ /* general put hooks */
+-int put_int_hook(), put_bool_hook(), put_str_hook();
++static int put_int_hook(), put_bool_hook(), put_str_hook();
+ 
+ /* variable specific hooks */
+-Char *get_pagelen_hook(), *get_curcol_hook(), *get_curline_hook();
+-int put_pagelen_hook(), put_curcol_hook(), put_curline_hook();
+-int put_curwidth_hook(), put_cbufname_hook(), put_cfname_hook();
++static Char *get_pagelen_hook(), *get_curcol_hook(), *get_curline_hook();
++static int put_pagelen_hook(), put_curcol_hook(), put_curline_hook();
++static int put_curwidth_hook(), put_cbufname_hook(), put_cfname_hook();
+ #if KANJI
+-int put_kterminal_hook();
+-Char *get_kcode_hook();
+-int put_kcode_hook();
+-int put_tcode_hook();
+-int put_bufcode_hook();
++static int put_kterminal_hook();
++static Char *get_kcode_hook();
++static int put_kcode_hook();
++static int put_tcode_hook();
++static int put_bufcode_hook();
+ #endif
+-Char *get_curchar_hook();
+-int put_curchar_hook();
+-int put_modeline_hook();
++static Char *get_curchar_hook();
++static int put_curchar_hook();
++static int put_modeline_hook();
+ #if	CLOCK
+-int put_cperiod_hook();
++static int put_cperiod_hook();
+ #endif
+ 
+ /*	list of recognized environment variables	*/
+@@ -83,15 +91,15 @@
+ 		(char *)&fillcol, get_int_hook, put_int_hook},
+ 	{CSTR("pagelen"), EV_GLOBAL,	/* number of lines used by editor */
+ 		NULL, get_pagelen_hook, put_pagelen_hook},
+-	{CSTR("curcol"), EV_LOCAL,	/* current column pos of cursor */
++	{CSTR("curcol"), EV_BLOCAL,	/* current column pos of cursor */
+ 		NULL, get_curcol_hook, put_curcol_hook},
+-	{CSTR("curline"), EV_LOCAL,	/* current line in file */
++	{CSTR("curline"), EV_BLOCAL,	/* current line in file */
+ 		NULL, get_curline_hook, put_curline_hook},
+ 	{CSTR("curwidth"), EV_GLOBAL,	/* current screen width */
+ 		(char *)&term.t_ncol, get_int_hook, put_curwidth_hook},
+-	{CSTR("cbufname"), EV_LOCAL,	/* current buffer name */
++	{CSTR("cbufname"), EV_BLOCAL,	/* current buffer name */
+ 		BUF_OFS(b_bname), get_str_hook, put_cbufname_hook},
+-	{CSTR("cfname"), EV_LOCAL,	/* current file name */
++	{CSTR("cfname"), EV_BLOCAL,	/* current file name */
+ 		BUF_OFS(b_fname), get_str_hook, put_cfname_hook},
+ 	{CSTR("debug"),	EV_GLOBAL,	/* macro debugging */
+ 		(char *)&macbug, get_bool_hook, put_bool_hook},
+@@ -104,7 +112,7 @@
+ 		(char *)&kcode, get_kcode_hook, put_kcode_hook},
+ 	{CSTR("tcode"), EV_GLOBAL,	/* terminal code */
+ 		(char *)&term.t_code, get_kcode_hook, put_tcode_hook},
+-	{CSTR("bcode"), EV_LOCAL,	/* current buffer's file code */
++	{CSTR("bcode"), EV_BLOCAL,	/* current buffer's file code */
+ 		BUF_OFS(b_code), get_kcode_hook, put_bufcode_hook},
+ #endif
+ #if ASAVE
+@@ -131,7 +139,7 @@
+ 	   (char *)&disinp, get_bool_hook, put_bool_hook},
+ 	{CSTR("gmodeline"), EV_GLOBAL,	/* global mode line format */
+ 	   (char *)&gmodeline, get_str_hook, put_modeline_hook},
+-	{CSTR("bmodeline"), EV_LOCAL,	/* buffer mode line format */
++	{CSTR("bmodeline"), EV_BLOCAL,	/* buffer mode line format */
+ 		BUF_OFS(b_modeline), get_str_hook, put_modeline_hook},
+ #if	CLOCK
+ 	{CSTR("cperiod"), EV_GLOBAL,	/* period of timer in seconds */
+@@ -139,6 +147,17 @@
+ #endif
+ 	{CSTR("time"),	EV_GLOBAL,	/* current time string */
+ 		NULL, getclock, readonly_hook},
++
++	{CSTR("searchpat"), EV_GLOBAL,	/* current search pattern */
++		(char *)pat, NULL, NULL},
++	{CSTR("replacepat"), EV_GLOBAL,	/* current replace pattern */
++		(char *)rpat, NULL, NULL},
++	{CSTR("cwinlen"), EV_WLOCAL,	/* # of rows of text in window */
++		WIN_OFS(w_ntrows), get_int_hook, readonly_hook},
++	{CSTR("cwintop"), EV_WLOCAL,	/* origin of top row of window */
++		WIN_OFS(w_toprow), get_int_hook, readonly_hook},
++	{CSTR("cwinid"), EV_WLOCAL,	/* window id */
++		WIN_OFS(w_id), get_int_hook, readonly_hook},
+ };
+ 
+ #define	NEVARS	(sizeof(envars) / sizeof(ENVAR))
+@@ -189,6 +208,9 @@
+ 	CSTR("rnd"), MONAMIC,		/* get a random number */
+ 	CSTR("abs"), MONAMIC,		/* absolute value of a number */
+ 	CSTR("bin"), MONAMIC,		/* function name bound to this key sequence */
++
++	CSTR("bmo"), MONAMIC,
++	CSTR("gmo"), MONAMIC,
+ };
+ 
+ #define	NFUNCS	sizeof(funcs) / sizeof(UFUNC)
+@@ -227,4 +249,7 @@
+ 	UFRND,
+ 	UFABS,
+ 	UFBIND,
++
++	UFBMODE,
++	UFGMODE,
+ };
+diff -ruN kemacs-2.1k.orig/eversion.H_ kemacs-2.1k/eversion.H_
+--- kemacs-2.1k.orig/eversion.H_	1993-07-07 10:09:45.000000000 +0900
++++ kemacs-2.1k/eversion.H_	2012-11-25 00:37:11.000000000 +0900
+@@ -14,7 +14,9 @@
+ 			CSTR("KEMACS")
+ #if KMSGS
+ # define KPRGNAME	\
+-			CSTR("$BF|K\8l(J uEMACS")
++			CSTR("$BF|K\8l&L(JEMACS")
++ /* uEMACS$B"*&L(JEMACS by N.Nide; this change was once rejected
++    by the kemacs author (^^;) */
+ #endif
+ 
+ #define VERSION		\
+diff -ruN kemacs-2.1k.orig/file.C_ kemacs-2.1k/file.C_
+--- kemacs-2.1k.orig/file.C_	1990-09-21 21:52:29.000000000 +0900
++++ kemacs-2.1k/file.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -25,7 +25,7 @@
+ 
+ 	if ((s=mlreply(
+ #if KANJI
+-		kterminal? CSTR("$BFI9~$`%U%!%$%kL>(J: "):
++		kterminal? CSTR("$BFI$_9~$`%U%!%$%kL>(J: "):
+ #endif
+ 		CSTR("Read file: "),
+ 					    fname, NFILEN)) != TRUE)
+@@ -261,28 +261,35 @@
+ #if	AUTOMODE
+ 	p = cfromC(fname);
+ 	for (i = 0; i < npatent; i++) {
+-# if USG
+-	  register char *re;
+-#endif
+-
+-# if BSD
++# if HAVE_REGEX
++	  regex_t preg;
++	  (void)regcomp(&preg, pattbl[i].pat, REG_NOSUB);
++	  if (regexec(&preg, p, 0, NULL, 0) == 0)
++# else
++#  if BSD
+ 	  (void)re_comp(pattbl[i].pat);
+ 	  if (re_exec(p))
+-# endif
+-# if USG
++#  endif
++#  if USG
++	  register char *re;
+ 	  re = regcmp(pattbl[i].pat, NULL);
+ 	  if (regex(re, p))
++#  endif
+ # endif
+ 	    bp->b_mode |= pattbl[i].mode;
++# if HAVE_REGEX
++	  regfree(&preg);
++# endif
+ 	}
+ #endif /* AUTOMODE */
+ 	(void)copystr(&bp->b_fname, fname);
+ 
+ 	/* Hard file open.	*/
++	  /* debug by N.Nide; uses bp->b_fname instead of fname */
+ #if	KANJI
+-	if ((s=ffropen(fname, KS_VALUE(bp->b_code))) == FIOERR)
++	if ((s=ffropen(bp->b_fname, KS_VALUE(bp->b_code))) == FIOERR)
+ #else
+-	if ((s=ffropen(fname)) == FIOERR)
++	if ((s=ffropen(bp->b_fname)) == FIOERR)
+ #endif
+ 		goto out;
+ 	if (s == FIOFNF) {			/* File not found.	*/
+@@ -332,13 +339,13 @@
+ 	if (lflag)
+ 		(void)Cstrcat(line,
+ #if KMSGS
+-				    kterminal? CSTR("$BD9$9$.$k9T$"$j!$(J"):
++				    kterminal? CSTR("$BD9$9$.$k9T$"$j!"(J"):
+ #endif
+ 				    CSTR("Long lines wrapped, "));
+ 	if (s == FIOFUN)
+ 		(void)Cstrcat(line,
+ #if KMSGS
+-				    kterminal? CSTR("$B:G8e$N9T$K2~9T$J$7!$(J"):
++				    kterminal? CSTR("$B:G8e$N9T$K2~9T$J$7!"(J"):
+ #endif
+ 				    CSTR("Funny line at EOF, "));
+ 	if (s == FIOEOF || s == FIOFUN) {        /* Don't zap message!   */
+@@ -416,7 +423,7 @@
+ #endif
+ 	if ((s=mlreply(
+ #if KMSGS
+-		kterminal? CSTR("$B=q9~$`%U%!%$%kL>(J: "):
++		kterminal? CSTR("$B=q$-9~$`%U%!%$%kL>(J: "):
+ #endif
+ 		CSTR("Write file: "),
+ 					     fname, NFILEN)) != TRUE)
+@@ -504,7 +511,7 @@
+         }
+ 	mlwrite(
+ #if KMSGS
+-	    kterminal? CSTR("[$B=q9~$_Cf(J..]"):
++	    kterminal? CSTR("[$B=q$-9~$_Cf!D(J]"):
+ #endif
+ 	    CSTR("[Writing..]"));
+ 						/* tell us were writing */
+@@ -525,7 +532,7 @@
+ 		if (s == FIOSUC) {		/* No close error.	*/
+ 			mlwrite(
+ #if KMSGS
+-			    kterminal? CSTR("[%d$B9T=q9~$^$l$^$7$?(J]"):
++			    kterminal? CSTR("[%d$B9T=q$-9~$^$l$^$7$?(J]"):
+ #endif
+ 			    CSTR("[Wrote %d line%s]"), nline,
+ 			    (nline==1)? CSTR(""):
+@@ -676,13 +683,13 @@
+ 	if (lflag)
+ 		(void)Cstrcat(line, 
+ #if KMSGS
+-				    kterminal? CSTR("$BD9$9$.$k9T$"$j!$(J"):
++				    kterminal? CSTR("$BD9$9$.$k9T$"$j!"(J"):
+ #endif
+ 				    CSTR("Long lines wrapped, "));
+ 	if (s == FIOFUN)
+ 		(void)Cstrcat(line, 
+ #if KMSGS
+-				    kterminal? CSTR("$B:G=*9T$K2~9T$J$7!$(J"):
++				    kterminal? CSTR("$B:G=*9T$K2~9T$J$7!"(J"):
+ #endif
+ 				    CSTR("Funny line at EOF, "));
+ 	if (s == FIOEOF || s == FIOFUN) {        /* Don't zap message!   */
+@@ -755,23 +762,37 @@
+ }
+ #endif /*FEXPAND*/
+ 
+-/* make sure a buffer name is unique */
++/* make sure a buffer name is unique (mod Nide) */
+ unqname(name)
+-     Char *name;	/* name to check on */
++     Char *name; /* name to check on (assuming that the buffer size is NBUFN) */
+ {
+-  register Char *sp;
++  register Char *sp, *ep;
++
++  name[NBUFN-1] = '\0'; /* make sure that it terminates */
++  sp = ep = name + Cstrlen(name);
+ 
+   /* check to see if it is in the buffer list */
+-  while (bfind(name, 0, FALSE) != NULL) {
++  while (bfind(name, FALSE, 0) != NULL) {
++    register Char *mp;
+ 
+-    /* go to the end of the name */
+-    sp = name;
+-    while (*sp)
+-      ++sp;
+-    if (sp == name || (*(sp-1) <'0' || *(sp-1) > '8')) {
+-      *sp++ = '0';
+-      *sp = 0;
+-    } else
+-      *(--sp) += 1;
++    /* concat 001--999, 1000--9999, 10000--99999, ... to the buffer name */
++    for (mp = ep; sp < mp; ) { /* sp: number start, ep: number end */
++      if(*--mp != '9') {
++	(*mp)++; goto cont; /* increment */
++      } else *mp = '0';
++    }
++    if (ep < &name[NBUFN-1]) {
++      if (sp == ep) { /* first time. concat 001 */
++	int i = &name[NBUFN-1] - ep; if (i > 3) i = 3; /* 1<=i<=3 */
++	while(--i) *ep++ = '0'; /* 0--2 times */
++	*ep++ = '1'; *ep = '\0';
++      } else { /* 999 -> 1000 */
++	*ep++ = '0'; *ep = '\0'; *sp = '1';
++      }
++    } else { /* X999 -> 1000 */
++      *--sp = '1';
++    }
++  cont:
++    ;
+   }
+ }
+diff -ruN kemacs-2.1k.orig/fileio.C_ kemacs-2.1k/fileio.C_
+--- kemacs-2.1k.orig/fileio.C_	1990-09-21 21:52:29.000000000 +0900
++++ kemacs-2.1k/fileio.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -7,7 +7,7 @@
+ #include	"estruct.h"
+ #include	"edef.h"
+ 
+-FILE	*ffp;				/* File pointer, all functions. */
++static	FILE	*ffp;			/* File pointer, all functions. */
+ 
+ /*
+  * Open a file for reading.
+@@ -32,6 +32,7 @@
+ 	KS_VALUE(cc) = code;
+ 	KS_THRU(cc) = 1; /* thru for file */
+ 	if (KS_INTERP(cc) != KS_BINARY) KS_INTERP(cc) = KS_UKANJI;
++	KS_EOLINT(cc) = KS_EOLUK;
+ 	kfopen(ffp, KS_VALUE(cc));
+ #else
+ 	if ((ffp=fopen(fn, "r")) == NULL) return (FIOFNF);
+@@ -63,7 +64,7 @@
+ # endif
+ 		mlwrite(
+ #if KANJI
+-		    kterminal? CSTR("$B%U%!%$%k$r=q9~MQ$K%*!<%W%s$G$-$^$;$s(J"):
++		    kterminal? CSTR("$B%U%!%$%k$r=q$-9~$_MQ$K%*!<%W%s$G$-$^$;$s(J"):
+ #endif
+ 		    CSTR("Cannot open file for writing"));
+ 		return (FIOERR);
+@@ -145,7 +146,7 @@
+ 	if (ferror(ffp)) {
+ 		mlwrite(
+ #if KMSGS
+-		    kterminal? CSTR("$B=q9~$_%(%i!<(J"):
++		    kterminal? CSTR("$B=q$-9~$_%(%i!<(J"):
+ #endif
+ 		    CSTR("Write I/O error"));
+ 		return (FIOERR);
+@@ -199,7 +200,7 @@
+ 		if (ferror(ffp)) {
+ 			mlwrite(
+ #if KMSGS
+-			    kterminal? CSTR("$B%U%!%$%kFI9~%(%i!<(J"):
++			    kterminal? CSTR("$B%U%!%$%kFI$_9~$_%(%i!<(J"):
+ #endif
+ 			    CSTR("File read error"));
+ 			return (FIOERR);
+diff -ruN kemacs-2.1k.orig/input.C_ kemacs-2.1k/input.C_
+--- kemacs-2.1k.orig/input.C_	1990-09-21 21:52:30.000000000 +0900
++++ kemacs-2.1k/input.C_	2012-11-25 00:51:15.000000000 +0900
+@@ -10,6 +10,8 @@
+ # define iscntrl(c)	((c) <= ' ' || (c) == 0x7f)
+ #endif
+ 
++static int prntchar(), killchar();
++
+ /*
+  * Ask a yes or no question in the message line. Return either TRUE, FALSE, or
+  * ABORT. The ABORT status is returned if the user bumps out of the question
+@@ -65,27 +67,27 @@
+ }
+ 
+ /*	ectoc:	expanded character to character
+-		colapse the CTRL and SPEC flags back into an ascii code   */
++		colapse the CTLFLG and SPEC flags back into an ascii code   */
+ 
+ Char
+ ectoc(c)
+ 	Ckey c;
+ {
+-	if (c & CTRL)
+-		c = c & ~(CTRL | 0x40);
++	if (c & CTLFLG)
++		c = c & ~(CTLFLG | 0x40);
+ 	if (c & SPEC)
+ 		c= c & ~SPEC;
+ 	return((Char)c);
+ }
+ 
+ /*	ctoec:	character to extended character
+-		pull out the CTRL and SPEC prefixes (if possible)	*/
++		pull out the CTLFLG and SPEC prefixes (if possible)	*/
+ Ckey
+ ctoec(c)
+ 	Char c;
+ {
+         if (c>=0x00 && c<=0x1F)
+-                return ((Ckey)(c | CTRL | 0x40));
++                return ((Ckey)(c | CTLFLG | 0x40));
+         return ((Ckey)c);
+ }
+ 
+@@ -257,7 +259,7 @@
+ 
+ /*
+  *	GET1KEY:	Get one keystroke. The only prefix legal here
+- *			is the CTRL prefix.
++ *			is the CTLFLG prefix.
+  */
+ 
+ Ckey
+@@ -269,7 +271,7 @@
+         c = tgetc();
+ 
+ 	if (c < ' ')		     /* C0 control -> C-     */
+-		c |= CTRL | 0x40;
++		c |= CTLFLG | 0x40;
+ 	return (c);
+ }
+ 
+@@ -291,7 +293,7 @@
+ 	if (c == metac) {
+ 		m = META;
+ 		if ((c = get1key()) == abortc) return(c);
+-	        if (islower(c))		/* Force to upper */
++	        if (isLower(c))		/* Force to upper */
+         	        c ^= DIFCASE;
+ 		if (c=='O') {			/* Escape O */
+ 			if ((c = get1key()) == abortc) return(c);
+@@ -299,7 +301,7 @@
+ 		}
+ 		if (c < ' ') {		/* control key */
+ 			c += '@';
+-			m |= CTRL;
++			m |= CTLFLG;
+ 		}
+ 		return (m | c);
+ 	}
+@@ -308,11 +310,11 @@
+ 	if (c == ctlxc) {
+ 		m = CTLX;
+ 		if ((c = get1key()) == abortc) return(c);
+-	        if (islower(c))		/* Force to upper */
++	        if (isLower(c))		/* Force to upper */
+         	        c ^= DIFCASE;
+ 		if (c < ' ') {		/* control key */
+ 			c += '@';
+-			m |= CTRL;
++			m |= CTLFLG;
+ 		}
+ 		return(m | c);
+ 	}
+@@ -347,8 +349,8 @@
+ 
+ 		if (!quotef) {
+ 			/* If it is a <ret>, change it to a <NL> */
+-			if (c == (CTRL | 'M'))
+-				c = CTRL | 0x40 | '\n';
++			if (c == (CTLFLG | 'M'))
++				c = CTLFLG | 0x40 | '\n';
+ 
+ 			/* if they hit the line terminate, wrap it up */
+ 			if (c == eolchar) {
+@@ -368,7 +370,7 @@
+ 				return(ABORT);
+ 			}
+ 
+-			if (c==0x7F || c== (CTRL | 'H')) {
++			if (c==0x7F || c== (CTLFLG | 'H')) {
+ 				/* rubout/erase */
+ 				if (cpos > 0) {
+ 					ttcol -= killchar(buf[--cpos]);
+@@ -376,7 +378,7 @@
+ 				}
+ 				continue;
+ 			}
+-			if (c == (CTRL | 'U')) {
++			if (c == (CTLFLG | 'U')) {
+ 				/* C-U, kill */
+ 				while (cpos > 0)
+ 					ttcol -= killchar(buf[--cpos]);
+diff -ruN kemacs-2.1k.orig/isearch.C_ kemacs-2.1k/isearch.C_
+--- kemacs-2.1k.orig/isearch.C_	1990-09-21 21:52:32.000000000 +0900
++++ kemacs-2.1k/isearch.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -39,6 +39,10 @@
+ int	cmd_offset;			/* Current offset into command buff */
+ int	cmd_reexecute = -1;		/* > 0 if re-executing command */
+ 
++static	void	reeat();
++static	Ckey	get_char();
++static	int	echochar();
++
+ 
+ /*
+  * Subroutine to do incremental reverse search.	 It actually uses the
+@@ -143,9 +147,6 @@
+     LINE		*curline;	/* Current line on entry	      */
+     int			curoff;		/* Current offset on entry	      */
+     int			init_direction; /* The initial search direction	      */
+-    void		reeat();
+-    Ckey		get_char();
+-    int			echochar();
+ 
+     /* Initialize starting conditions */
+ 
+diff -ruN kemacs-2.1k.orig/kanji/Makefile.kanji kemacs-2.1k/kanji/Makefile.kanji
+--- kemacs-2.1k.orig/kanji/Makefile.kanji	1993-07-07 09:44:37.000000000 +0900
++++ kemacs-2.1k/kanji/Makefile.kanji	2012-11-25 00:37:11.000000000 +0900
+@@ -23,7 +23,7 @@
+ 
+ CCFLAGS       = -O
+ 
+-CFLAGS	      = $(CCFLAGS)
++CFLAGS	      = $(CCFLAGS) $(EINCL)
+ 
+ all:		$(LIBRARY)
+ 
+diff -ruN kemacs-2.1k.orig/kanji/jtos.c kemacs-2.1k/kanji/jtos.c
+--- kemacs-2.1k.orig/kanji/jtos.c	1993-07-07 10:02:01.000000000 +0900
++++ kemacs-2.1k/kanji/jtos.c	2012-11-25 00:37:11.000000000 +0900
+@@ -11,7 +11,7 @@
+ 	register int jh = ((*j >> 8) & 0377), jl = (*j & 0377);
+ 	register int sh, sl;
+ 
+-	if (jh <= ' ' || jh >= '\177' || jl <= ' ' || jh >= '\177') return 1;
++	if (jh <= ' ' || jh >= '\177' || jl <= ' ' || jl >= '\177') return 1;
+ 	sh = ((jh - 0x21) >> 1) + 0x81;
+ 	if (sh > 0x9f)
+ 		sh += 0x40;
+diff -ruN kemacs-2.1k.orig/kanji/kalloc.c kemacs-2.1k/kanji/kalloc.c
+--- kemacs-2.1k.orig/kanji/kalloc.c	1993-07-07 10:02:45.000000000 +0900
++++ kemacs-2.1k/kanji/kalloc.c	2012-11-25 00:37:11.000000000 +0900
+@@ -4,14 +4,25 @@
+ 
+ #include "kanji.h"
+ 
++unsigned ks_binmode_flag()
++{
++	static KS_FLAG flg;
++	static int first = 1;
++	if(first){
++		first = 0;
++		KS_THRU(flg) = 1;
++		KS_INTERP(flg) = KS_BINARY;
++	}
++	return flg.u_flag;
++}
++
+ KSTREAM *
+ kalloc(id, openf, closef, getf, putf, flag)
+-	caddr_t id;
++	caddr_t id; /* KS* or KF* */
+ 	int (*openf)(), (*closef)(), (*getf)(), (*putf)();
+ 	unsigned flag;
+ {
+ 	register KSTREAM *ksp;
+-	char *malloc();
+ 
+ 	if ((!getf && !putf) ||
+ 	     !(ksp = (KSTREAM *)malloc(sizeof(KSTREAM)))) return NULL;
+@@ -22,8 +33,7 @@
+ 	ksp->ks_putf = putf;
+ 	KS_VALUE(ksp->ks_flag) = flag;
+ 	ksp->ks_gstate = ksp->ks_pstate = 0;
+-	ksp->ks_ql = 0;
+-	ksp->ks_buf[0] = '\0';
++	ksp->ks_ql = ksp->ks_ul = ksp->ks_bl = 0;
+ 	(void)(*ksp->ks_openf)(id);
+ 	return ksp;
+ }
+diff -ruN kemacs-2.1k.orig/kanji/kanji.h kemacs-2.1k/kanji/kanji.h
+--- kemacs-2.1k.orig/kanji/kanji.h	1993-07-07 10:03:42.000000000 +0900
++++ kemacs-2.1k/kanji/kanji.h	2012-11-25 14:45:34.000000000 +0900
+@@ -1,5 +1,7 @@
+ #ifndef KFILE
+ 
++#include "../econfig.h"
++
+ #ifndef FILE
+ #include <stdio.h>
+ #endif
+@@ -8,6 +10,37 @@
+ #include <sys/types.h>
+ #endif
+ 
++#ifdef __STDC__
++# include <stdlib.h>
++#else
++# ifdef MALLOC_CHARSTAR
++char *malloc(), *realloc();
++# else
++void *malloc(), *realloc();
++# endif
++#endif
++
++#if BSD_LEGACY
++# include <strings.h>
++#else
++# include <string.h>
++#endif
++
++#if HANDLE_UTF
++# include <iconv.h>
++# if ICONV_2ARG_CONST
++#  define Iconv(d, i, ib, o, ob) iconv((d), (const char**)(i), (ib), (o), (ob))
++# else
++#  define Iconv iconv
++# endif
++#endif
++
++#define numberof(x) (sizeof(x)/sizeof(*(x)))
++#define tailof(x) ((x)+numberof(x))
++
++#define MAX_U8LEN 6
++#define MAXPEND ((MAX_U8LEN)-1)	/* max size of pending stream data */
++
+ typedef struct {
+   caddr_t	ks_id;		/* pointer to stream structure */
+   int (*ks_openf)();	/* pointer to stream open function */
+@@ -23,6 +56,8 @@
+       unsigned s_pass:1;	/* don't process SI/SO of JIS */
+       unsigned s_ki:2;	/* kanji version */
+       unsigned s_ri:2;	/* alphabet set */
++      unsigned s_eolint:1;	/* EOL interpretation of stream (Add Nide) */
++      unsigned s_eol:2;	/* type of EOL (Add Nide; only for fileIO) */
+     } u_str;
+   } ks_flag;
+   int ks_gstate;		/* stream input status */
+@@ -30,7 +65,9 @@
+   int ks_queue[BUFSIZ];	/* buffer for queued characters */
+   int ks_qp;		/* queue pointer */
+   int ks_ql;		/* queue length */
+-  int ks_buf[1];		/* buffer for pending stream data */
++  int ks_ul;		/* length of unbuffered data (Add Nide) */
++  int ks_buf[MAXPEND];	/* buffer for pending stream data */
++  int ks_bl;		/* used length of ks_buf[] */
+ } KSTREAM;
+ 
+ typedef union ks_un	KS_FLAG;
+@@ -44,6 +81,9 @@
+ # define KS_JIS  0
+ # define KS_UJIS 1
+ # define KS_SJIS 2
++# if HANDLE_UTF
++#  define KS_UTF8 3
++# endif
+ #define KS_PASS(f)	(f).u_str.s_pass
+ #define KS_KI(f)	(f).u_str.s_ki
+ # define KS_OLDJIS	0
+@@ -52,9 +92,18 @@
+ # define KS_ROMAJI	0
+ # define KS_ASCII	1
+ # define KS_BOGUS	2
++#define KS_EOLINT(f)	(f).u_str.s_eolint
++# define KS_EOLKNOWN	0
++# define KS_EOLUK	1
++#define KS_EOL(f)	(f).u_str.s_eol
++# define KS_LF		0
++# define KS_CR		1
++# define KS_CRLF	2
+ 
+ #define KFILE		KSTREAM
+ 
++#define KS_BINMODE	ks_binmode_flag()
++
+ #ifdef iscntrl
+ # undef iscntrl
+ #endif
+@@ -63,18 +112,19 @@
+ #define isascii(c) (((c) & 0xff00) == 0)
+ #define iskana(c) (((c) & 0xff00) == 0x0100)
+ #define iskanji(c) (((c) & 0xff00) > 0x0100)
+-#define issjhigh(c) (((c) > 0200 && (c) < 0240)||((c) >= 0360 && c <= 0374))
+   
+ #define enkana(k, c) ((k) = (((c) & 0x7f) | 0x0100))
+ #define dekana(k, c) ((c) = ((k) & 0x7f))
+   
+-#define enkanji(k, c1, c2) ((k) = ((((c1) & 0x7f) << 8) | ((c2) & 0xff)))
++#define enkanji(k, c1, c2) ((k) = ((((c1) & 0x7f) << 8) | ((c2) & 0x7f)))
+ #define dekanji(k, c1, c2) ((((c1) = ((k) >> 8) & 0x7f)), ((c2) = (k) & 0x7f))
+   
+ #define ESCAPE		0x1b
+ #define SHFTIN		0x0f
+ #define SHFTOU		0x0e
+ #define SSHFT2		0x8e
++#define SSHFT3		0x8f
++#define CNTRLZ		0x1a
+ 
+ extern KSTREAM *	kalloc();
+ extern int		kfree();
+@@ -85,4 +135,4 @@
+ extern int		jtos();
+ extern int		stoj();
+ 
+-#endif !KFILE
++#endif /* !KFILE */
+diff -ruN kemacs-2.1k.orig/kanji/kfree.c kemacs-2.1k/kanji/kfree.c
+--- kemacs-2.1k.orig/kanji/kfree.c	1993-07-07 10:05:11.000000000 +0900
++++ kemacs-2.1k/kanji/kfree.c	2012-11-25 00:37:11.000000000 +0900
+@@ -4,7 +4,7 @@
+ 
+ #include "kanji.h"
+ 
+-#define KANJI	1
++#define JKANJI	1
+ #define KANA	2
+ 
+ int
+@@ -18,7 +18,7 @@
+ 			b[0] = SHFTIN;
+ 			(void)(*ksp->ks_putf)(ksp->ks_id, b, 1);
+ 		}
+-		if (ksp->ks_pstate & KANJI) {
++		if (ksp->ks_pstate & JKANJI) {
+ 			b[0] = ESCAPE;
+ 			b[1] = '(';
+ 			b[2] = (KS_RI(ksp->ks_flag) == KS_ROMAJI)? 'J': 'B';
+diff -ruN kemacs-2.1k.orig/kanji/kgetc.c kemacs-2.1k/kanji/kgetc.c
+--- kemacs-2.1k.orig/kanji/kgetc.c	1993-07-07 10:05:47.000000000 +0900
++++ kemacs-2.1k/kanji/kgetc.c	2012-11-25 14:47:59.000000000 +0900
+@@ -1,22 +1,233 @@
+ #include "kanji.h"
++#define IBFSIZ	32	/* enough size for conversion from input stream
++			   to internal expression */
+ 
+ /*
+  * kgetc():	get character sequence from file stream and
+  *          returns them in 16-bit format.
+  */
+ 
+-#define KANJI_STATE	0xff00
+-#define NORMAL		0x0000
+-#define KANJI		0x0100
++#define KST_STATE	0xf000
++#define KST_EOF		0x1000 /* input stream is at EOF state */
++#define KST_NODATA	0x2000 /* nothing to read rignt now */
++#define KST_ADDREAD	0x4000 /* just after restoring unbufferd bytes
++				  at the tail of ks_queue (or broken bytes
++				  in ks_buf) */
++
++#define KANJI_STATE	0x0f00
++#define JKANJI		0x0100
+ #define KANA		0x0200
++#define G1KANA		0x0400 /* KANA by ^N/^O */
+ 
+-#define ESC_STATE	0x00ff
++#define ESC_STATE	0x000f
++#define NON_ESC		0x0000
+ #define ESC		0x0001
+ #define ESC_DOL		0x0002
+ #define ESC_PAR		0x0003
++#define ESC_DOL_PAR	0x0004
++
++#define CR_STATE	0x00f0
++#define NON_EOL		0x0000
++#define CR		0x0010
++#define DOSEOF		0x0020
+ 
+ #define putq(c)		(kp->ks_queue[kp->ks_ql++] = (c))
+ 
++static void
++sweep_esc(kp)
++  register KSTREAM *kp;
++{
++  switch (kp->ks_gstate & ESC_STATE) {
++  case ESC:
++    putq(ESCAPE);
++    break;
++  case ESC_PAR:
++    putq(ESCAPE);
++    putq('(');
++    break;
++  case ESC_DOL:
++    putq(ESCAPE);
++    putq('$');
++    break;
++  case ESC_DOL_PAR:
++    putq(ESCAPE);
++    putq('$');
++    putq('(');
++    break;
++  }
++  kp->ks_gstate &= ~ESC_STATE;
++}
++
++#if HANDLE_UTF
++static int
++utf8_restbytes(c)
++  int c;
++{
++  return c < 0x80 ? 0 : c < 0xc2 ? -1: c < 0xe0 ? 1 : c < 0xf0 ? 2 :
++	 c < 0xf8 ? 3 : c < 0xfc ? 4 : c < 0xfe ? 5 : -1;
++}
++
++#define enhojokanji(k, c1, c2) (enkanji((k), (c1), (c2)), (k) |= 0x8000)
++     /* Using highest bit to represent hojo-kanji set
++	(but actually kemacs doesn't support hojo-kanji) */
++#define U8CNV3(c) \
++  0xe0 | (unsigned int)(c) >> 12, \
++  0x80 | ((unsigned int)(c) >> 6) & 0x3f, \
++  0x80 | ((unsigned int)(c)) & 0x3f
++typedef struct {
++  int ej;
++  unsigned char u8[3];
++} tblstr;
++static tblstr tbl1 = {0x2141, {U8CNV3(0xff5e)}};
++static tblstr tbl2[] = { /* ascending order in u8[] */
++  {0x2142, {U8CNV3(0x2225)}},
++  {0x212b, {U8CNV3(0x3099)}},
++  {0x212c, {U8CNV3(0x309a)}},
++  {0x2149, {U8CNV3(0xff02)}},
++  {0x2147, {U8CNV3(0xff07)}},
++  {0x215d, {U8CNV3(0xff0d)}},
++  {0x2171, {U8CNV3(0xffe0)}},
++  {0x2172, {U8CNV3(0xffe1)}},
++  {0x224c, {U8CNV3(0xffe2)}},
++  {0xa243, {U8CNV3(0xffe4)}},
++};
++#define mkkanji(c, e) ((e)&0x8000? enhojokanji((c), ((e)>>8)|0x80, (e)|0x80): \
++  enkanji((c), ((e)>>8)|0x80, (e)|0x80))
++
++static int
++utf8_to_internal(p, n1) /* utf8 1 letter to internal expression */
++  char *p; /* On a small minority of systems, iconv() requires
++  	      `const char *' here */
++  int n1;
++{
++  static iconv_t cd = (iconv_t)(-1), cd2;
++  char tmpb[IBFSIZ], *tmpi = tmpb; 
++  size_t tmpn = sizeof(tmpb), n = n1;
++  int cc;
++
++#if 0
++  if (p == NULL) { /* try to close cd */
++    if (cd != (iconv_t)(-1)) {
++      iconv_close(cd); iconv_close(cd2); cd = (iconv_t)(-1);
++    }
++    return -1;
++  }
++#endif
++  if (cd == (iconv_t)(-1)) {
++    cd = iconv_open("EUC-JP", "UTF-8"); /* UTF-8 -> EUC-JP */
++    if (cd == (iconv_t)(-1)) {
++      puts("iconv_open() failed ... Why?\n"); exit(1);
++    }
++    cd2 = iconv_open("EUC-JISX0213", "UTF-8"); /* UTF-8 -> EUC-JISX0213 */
++  }
++
++  if (n == sizeof(tbl1.u8) && !memcmp(p, tbl1.u8, n)) { /* special case 1 */
++    mkkanji(cc, tbl1.ej); return cc;
++  }
++  if (-1 != Iconv(cd, &p, &n, &tmpi, &tmpn)) {
++    goto postproc;
++  }
++  if (n == sizeof(tbl2[0].u8)) {
++    int i, f;
++    for (i = 0; i < numberof(tbl2); i++) {
++      f = memcmp(p, tbl2[i].u8, n);
++      if (!f) {mkkanji(cc, tbl2[i].ej); return cc;} /* special case 2 */
++      if (f < 0) break;
++    }
++  }
++  if (cd2 != (iconv_t)(-1) && -1 != Iconv(cd2, &p, &n, &tmpi, &tmpn)) {
++    goto postproc;
++  }
++  return -1;
++
++postproc:
++  if (!(tmpb[0] & 0x80)) {
++    cc = tmpb[0] & 0x7f;
++  } else
++  if (tmpb[0] == (char)SSHFT2) {
++    enkana(cc, tmpb[1] & 0x7f);
++  } else
++  if (tmpb[0] == (char)SSHFT3) {
++    enhojokanji(cc, tmpb[1]&0x7f, tmpb[2]&0x7f);
++  } else {
++    enkanji(cc, tmpb[0]&0x7f, tmpb[1]&0x7f);
++  }
++  return cc;
++}
++#endif /* HANDLE_UTF */
++
++static int
++kdetermine(p, n)
++  char *p;
++  int n; /* determine kanji code from among 8-bit codes (UJIS, SJIS, UTF8) */
++{
++  int ujis_rest = 0, sjis_rest = 0;
++#if HANDLE_UTF
++  int utf8_rest = 0, sjis_have_1bytek = 0, possible = 3;
++#else
++  int possible = 2;
++#endif
++  register int c;
++
++  for(; n && possible > 1; n--, p++){
++    c = *p & 0xff;
++#define impossible(r) ((r) = -1, possible--)
++#if HANDLE_UTF
++    switch(utf8_rest){
++    case 0:
++      if((utf8_rest = utf8_restbytes(c)) < 0) possible--;
++       /* ... but actually kemacs support only JIS X0208 kanjis */
++      break;
++    case -1:
++      break;
++    default:
++      if(0x80 <= c && c <= 0xbf) utf8_rest--;
++      else impossible(utf8_rest);
++      break;
++    }
++#endif /* HANDLE_UTF */
++    switch(sjis_rest){
++    case 0:
++      if(!(c & 0x80)) ;
++      else if(0xa0 <= c && c <= 0xdf)
++#if HANDLE_UTF
++        sjis_have_1bytek = 1
++#endif
++      ;
++      else if(0x81 <= c && c <= 0xfc) sjis_rest = 1;
++      else impossible(sjis_rest);
++      break;
++    case -1:
++      break;
++    default:
++      if(0x40 <= c && c <= 0xfc && c != 0x7f) sjis_rest = 0;
++      else impossible(sjis_rest);
++      break;
++    }
++    switch(ujis_rest){
++    case 0:
++      if(!(c & 0x80)) ;
++      else if(0xa1 <= c && c <= 0xfe || c == SSHFT2) ujis_rest = 1;
++      else if(c == SSHFT3) ujis_rest = 2;
++       /* ... but actually kemacs doesn't support Hojo-kanji */
++      else impossible(ujis_rest);
++      break;
++    case -1:
++      break;
++    default:
++      if(0xa1 <= c && c <= 0xfe) ujis_rest--;
++      else impossible(ujis_rest);
++      break;
++    }
++  }
++  return ujis_rest >= 0 ? KS_UJIS : 
++#if HANDLE_UTF
++    sjis_rest >= 0 && !sjis_have_1bytek ? KS_SJIS :
++    utf8_rest >= 0 ? KS_UTF8 :
++#endif
++    sjis_rest >= 0 ? KS_SJIS : -1;
++}
++
+ int
+ kgetc(kp)
+   register KSTREAM *kp;
+@@ -26,6 +237,7 @@
+   register int n;
+   char buf[BUFSIZ];
+   register char *p;
++  int kst;
+ 
+   for (;;) {
+     if (kp->ks_ql > 0) {
+@@ -35,28 +247,78 @@
+     }
+     kp->ks_qp = 0;
+ 
+-    if (!(n = (*kp->ks_getf)(kp->ks_id, buf, BUFSIZ))) {
+-      /* nothing to read. reset escaping status */
+-      if (KS_INTERP(kp->ks_flag) == KS_KANJI &&
+-	  KS_CODE(kp->ks_flag) == KS_JIS) {
+-	switch (kp->ks_gstate & ESC_STATE) {
+-	case ESC:
+-	  putq(ESCAPE);
+-	  break;
+-	case ESC_PAR:
+-	  putq(ESCAPE);
+-	  putq('(');
+-	  break;
+-	case ESC_DOL:
+-	  putq(ESCAPE);
+-	  putq('$');
+-	  break;
++     /* Read from stream. If unbuffered bytes exist, restore them first */
++    switch (kp->ks_gstate & KST_STATE) {
++    case KST_EOF|KST_ADDREAD: case KST_NODATA|KST_ADDREAD:
++     /* At previous time, we had no data to read, but since we have
++        unbuffered data, we did not go into `if(!n)' process below.
++        We have to do it now */
++      kp->ks_gstate &= ~KST_ADDREAD;
++      n = 0;
++      break;
++    case KST_EOF:
++      return EOF;
++    default: /* 0 or KST_ADDREAD or KST_NODATA */
++     /* Unbuffered bytes are located at the tail of ks_queue. Restore it */
++      {
++	int rest = kp->ks_ul; /* Amount of unbuffered bytes (normally 0).
++	 kp->ks_ul can be non-zero only when (kp->ks_gstate&KST_STATE) is 0 */
++	kp->ks_ul = 0;
++	memcpy(buf, (void *)tailof(kp->ks_queue) - rest, rest);
++	n = (*kp->ks_getf)(kp->ks_id, buf + rest, sizeof(buf) - rest);
++	 /* EOF (n < 0), or nothing to read right now (n == 0) */
++	kp->ks_gstate &= ~KST_STATE; /* (kp->ks_gstate&KST_STATE) is cleared */
++	if (n <= 0) kp->ks_gstate |= n < 0 ? n = 0, KST_EOF : KST_NODATA;
++	if (rest) kp->ks_gstate |= KST_ADDREAD;
++	n += rest;
++      }
++      break;
++    }
++    /* At this moment, possible values of (kp->ks_gstate&KST_STATE) are:
++	KST_EOF, KST_NODATA (if n == 0)
++	0, KST_ADDREAD, KST_EOF|KST_ADDREAD, KST_NODATA|KST_ADDREAD (if n > 0)
++	  Once KST_EOF is set, it will never be reset */
++
++    if (!n) {
++     /* No data now. Flush buffered chars or reset escaping status, and
++        continue. (kp->ks_gstate&KST_STATE) is now KST_EOF or KST_NODATA */
++      if (kp -> ks_bl) { /* flush buffered broken chars */
++	int *q = kp -> ks_buf, n1 = kp -> ks_bl;
++	while (n1--) putq(*q++);
++	kp -> ks_bl = 0;
++	kp->ks_gstate |= KST_ADDREAD; 
++	 /* Since we may have to reset CR or escaping status afterward,
++	    we set KST_ADDREAD here, and go into `if(!n)' part again at
++	    the next iteration of loop */
++	continue;
++      }
++       /* Reset CR status (Added by Nide); never comes here when BINARY mode */
++      switch (kp->ks_gstate & CR_STATE) {
++      case CR:
++	if (KS_EOLINT(kp->ks_flag) == KS_EOLUK) {
++	  KS_EOLINT(kp->ks_flag) = KS_EOLKNOWN;
++	  KS_EOL(kp->ks_flag) = KS_CR;
++	  putq('\n');
++	} else { /* then KS_EOL(kp->ks_flag) == KS_CRLF */
++	  putq('\r');
+ 	}
+-	kp->ks_gstate &= ~ESC_STATE;
++	break;
++      case DOSEOF:
++	if (KS_EOL(kp->ks_flag) != KS_CRLF) putq(CNTRLZ);
++	 /* Do not output ^Z at EOF if KS_CRLF (ad hoc), including the case
++	    KS_EOLINT(kp->ks_flag) == KS_EOLUK */
++	break;
++      }
++      kp->ks_gstate &= ~CR_STATE;
++
++       /* Reset escaping status */
++      if ((kp->ks_gstate & KST_STATE) == KST_EOF /* Add Nide */ ||
++	  KS_INTERP(kp->ks_flag) == KS_KANJI &&
++	  KS_CODE(kp->ks_flag) == KS_JIS) {
++	sweep_esc(kp);
+       }
+       continue;
+     }
+-    if (n < 0) return EOF;
+     for (p = buf; n-- > 0; ) {
+       if (KS_INTERP(kp->ks_flag) == KS_BINARY) {
+ 	putq(*p++ & (KS_THRU(kp->ks_flag)?0xff: 0x7f));
+@@ -70,54 +332,179 @@
+ 	cc &= 0177;
+       } else
+ 	cc &= 0xff;
+-      if (c1 = kp->ks_buf[0]) {
+-	kp->ks_buf[0] = 0;
+-	/* combine broken 2-byte character */
++      if (kp->ks_bl) {
++      	int c2;
++	/* combine broken multibyte character */
+ 	switch (KS_CODE(kp->ks_flag)) {
+ 	case KS_JIS:
++	  c1 = kp->ks_buf[0], kp->ks_bl = 0;
+ 	  if (cc > ' ' && cc < 0x7f) {
+ 	    KS_INTERP(kp->ks_flag) = KS_KANJI;
+ 	    enkanji(cc, c1, cc);
+ 	    putq(cc);
+ 	    continue;
+ 	  }
++	  putq(c1);
+ 	  break;
+ 	case KS_UJIS:
+-	  if (c1 == SSHFT2 && cc & 0x80 &&
++	  c1 = kp->ks_buf[0], kp->ks_bl = 0;
++	  if (cc & 0x80 &&
+ 	      (cc & 0x7f) > ' ' && (cc & 0x7f)< 0x7f) {
+-	    /* UJIS KANA */
++	    /* UJIS KANA or KANJI */
+ 	    KS_INTERP(kp->ks_flag) = KS_KANJI;
+-	    enkana(cc, cc);
++	    c1 == SSHFT2 ? enkana(cc, cc) : enkanji(cc, c1&0x7f, cc&0x7f);
+ 	    putq(cc);
+ 	    continue;
+ 	  }
+-	  if ((cc & 0x7f) > ' ' && (cc & 0x7f) < 0x7f) {
+-	    /* UJIS KANJI */
++	  putq(c1);
++	  break;
++	case KS_SJIS:
++	  c1 = kp->ks_buf[0], kp->ks_bl = 0;
++	  if (!iscntrl(cc) && ((c2 = (c1 << 8) | cc), !stoj(&c2, &c2))){
+ 	    KS_INTERP(kp->ks_flag) = KS_KANJI;
+-	    enkanji(cc, c1&0x7f, cc&0x7f);
++	    if (c2 & 0x8000) putq(SSHFT3); /* treat as ujis hojo-kanji
++	     (but kemacs actually does not support hojo-kanji) */
++	    enkanji(cc, (c2>>8)&0x7f, c2&0x7f);
+ 	    putq(cc);
+ 	    continue;
+ 	  }
++	  putq(c1);
+ 	  break;
+-	case KS_SJIS:
+-	  if (cc >= 0x40) {
+-	    int c2 = (c1 << 8) | cc;
++#if HANDLE_UTF
++	case KS_UTF8:
++	  {
++	    int l = utf8_restbytes(kp->ks_buf[0]) + 1, *q = kp->ks_buf, m;
++	    char tmpb[MAX_U8LEN], *tmpi;
+ 
+-	    if (stoj(&c2, &c2)) break;
+-	    KS_INTERP(kp->ks_flag) = KS_KANJI;
+-	    enkanji(cc, (c2>>8)&0x7f, c2&0x7f);
+-	    putq(cc);
++	    p--, n++;
++	    if (l > kp->ks_bl + n) {
++	     /* bytes in kp->ks_buf and buf[] are still insufficient to 
++		compose a UTF8 letter. We put them toghther into kp->ks_buf */
++	      q += kp->ks_bl, kp->ks_bl += n;
++	      while (n--) *q++ = *p++ & 0xff;
++	      continue;
++	    }
++
++	     /* first put the contents of kp->ks_buf into tmpb */
++	    m = kp->ks_bl, tmpi = tmpb;
++	    while (m--) *tmpi++ = *q++;
++	     /* then put the rest bytes which are enough to compose
++	        a UTF letter from buf[] into tmpb */
++	    m = l - kp->ks_bl, kp->ks_bl = 0;
++	    memcpy(tmpi, p, m);
++	    p += m, n -= m;
++	    if (-1 != (cc = utf8_to_internal(tmpb, l))) {
++	      KS_INTERP(kp->ks_flag) = KS_KANJI;
++	      putq(cc);
++	      continue;
++	    }
++	     /* in this case, unlike in other kanji codes,
++		output all illegal bytes */
++	    tmpi = tmpb;
++	    while (l--) putq(*tmpi++ & 0xff);
++	    continue;
++	  }
++#endif /* HANDLE_UTF */
++	}
++      }
++
++      switch (kp->ks_gstate & CR_STATE) {
++       /* EOL treating (Added by Nide) */
++      case CR:
++	kp->ks_gstate &= ~CR_STATE;
++	if (KS_EOLINT(kp->ks_flag) == KS_EOLUK) {
++	  KS_EOLINT(kp->ks_flag) = KS_EOLKNOWN;
++	  switch (cc) {
++	  case '\n':
++	    KS_EOL(kp->ks_flag) = KS_CRLF;
++	    break;
++	  case '\r':
++	    cc = '\n'; /* FALLTHROUGH */
++	  default: /* including ^Z */
++	    KS_EOL(kp->ks_flag) = KS_CR;
++	    putq('\n');
++	    break;
++	  }
++	} else { /* then KS_EOL(kp->ks_flag) == KS_CRLF */
++	  switch (cc) {
++	  case '\n':
++	    break;
++	  case '\r':
++	    putq('\r');
++	    kp->ks_gstate |= CR;
++	    continue;
++	  case CNTRLZ:
++	    putq('\r');
++	    kp->ks_gstate |= DOSEOF;
+ 	    continue;
++	  default:
++	    putq('\r');
++	    break;
++	  }
++	}
++	break; /* normal treating for cc is needed */
++      case DOSEOF:
++	putq(CNTRLZ);
++	kp->ks_gstate &= ~CR_STATE;
++	switch (cc) {
++	case '\n':
++	  if (KS_EOLINT(kp->ks_flag) == KS_EOLUK) {
++	    KS_EOLINT(kp->ks_flag) = KS_EOLKNOWN;
++	    KS_EOL(kp->ks_flag) = KS_LF;
+ 	  }
+ 	  break;
++	case '\r':
++	  kp->ks_gstate |= CR;
++	  continue;
++	case CNTRLZ:
++	  kp->ks_gstate |= DOSEOF;
++	  continue;
++	default:
++	  break;
+ 	}
+-	putq(c1);
++	break;
++      case NON_EOL:
++	if (KS_EOLINT(kp->ks_flag) == KS_EOLUK) {
++	  switch (cc) {
++	  case '\n':
++	    KS_EOLINT(kp->ks_flag) = KS_EOLKNOWN;
++	    KS_EOL(kp->ks_flag) = KS_LF;
++	    break;
++	  case '\r':
++	    sweep_esc(kp);
++	    kp->ks_gstate |= CR;
++	    continue; /* no output at present */
++	  case CNTRLZ:
++	    sweep_esc(kp);
++	    kp->ks_gstate |= DOSEOF;
++	    continue;
++	  default:
++	    break;
++	  }
++	} else switch (KS_EOL(kp->ks_flag)) {
++	case KS_LF:
++	  break;
++	case KS_CR:
++	  if (cc == '\r') cc = '\n';
++	  break;
++	case KS_CRLF:
++	  switch(cc){
++	  case '\r':
++	    sweep_esc(kp);
++	    kp->ks_gstate |= CR;
++	    continue;
++	  case CNTRLZ:
++	    sweep_esc(kp);
++	    kp->ks_gstate |= DOSEOF;
++	    continue;
++	  }
++	  break;
++	}
++	break;
+       }
+-      switch (kp->ks_gstate) {
+-      case NORMAL:
+-      case KANJI:
+-      case KANA:
+-      case KANJI | KANA:
++
++      switch (kst = (kp->ks_gstate & ESC_STATE)) {
++      case NON_ESC:
+ 	switch (cc) {
+ 	case ESCAPE:
+ 	  if (KS_CODE(kp->ks_flag) == KS_JIS ||
+@@ -136,7 +523,7 @@
+ 	    KS_PASS(kp->ks_flag) = 0;
+ 	  }
+ 	  if (KS_CODE(kp->ks_flag) == KS_JIS && !KS_PASS(kp->ks_flag)) {
+-	    kp->ks_gstate |= KANA;
++	    kp->ks_gstate |= G1KANA;
+ 	    continue;
+ 	  }
+ 	  /* no special meaning */
+@@ -149,11 +536,12 @@
+ 	    KS_PASS(kp->ks_flag) = 0;
+ 	  }
+ 	  if (KS_CODE(kp->ks_flag) == KS_JIS && !KS_PASS(kp->ks_flag)) {
+-	    kp->ks_gstate &= ~KANA;
++	    kp->ks_gstate &= ~G1KANA;
+ 	    continue;
+ 	  }
+ 	  /* no special meaning */
+ 	  break;
++#if 0 /* moved into the case cc&0x80 */
+ 	case SSHFT2:
+ 	  if (KS_CODE(kp->ks_flag) == KS_UJIS ||
+ 	      KS_INTERP(kp->ks_flag) == KS_UKANJI) {
+@@ -161,6 +549,7 @@
+ 	    if (n < 1) {
+ 	      /* broken */
+ 	      kp->ks_buf[0] = cc;
++	      kp->ks_bl = 1;
+ 	      continue;
+ 	    }
+ 	    c1 = *p++;
+@@ -175,117 +564,138 @@
+ 	  }
+ 	  /* no special meaning */
+ 	  break;
++#endif /* if 0 */
+ 	}
+ 	if (cc & 0x80) {
+-	  if (cc < 0xa0) {
+-	    /* may be 1st byte of SJIS KANJI */
+-	    if (KS_CODE(kp->ks_flag) == KS_SJIS ||
+-		KS_INTERP(kp->ks_flag) == KS_UKANJI) {
+-	      KS_CODE(kp->ks_flag) = KS_SJIS;
+-	      if (n < 1) {
+-		/* broken */
+-		kp->ks_buf[0] = cc;
+-		continue;
+-	      }
+-	      c1 = *p++ & 0xff;
+-	      if (!iscntrl(c1) && ((c1 |= (cc << 8)), !stoj(&c1, &c1))) {
+-		n--;
++	  if (KS_INTERP(kp->ks_flag) == KS_UKANJI) {
++	    /* To use as many bytes as possible in determining kanji code,
++	       if the current byte (in cc) is not at the top of the buffer,
++	       then first we unbuffer the rest bytes here (to the unused area
++	       of ks_queue), and afterward, read from input stream to fill
++	       the buffer */
++	    n++, p--;
++
++	    if (p == buf) {
++	     /* cc is at the top of the buffer, so we can already use
++	        the full length of buffer to determine kanji code.
++	        We do not have to unbuffer and refill the buffer */
++	      int kcode = kdetermine(p, n);
++	      if (kcode >= 0) {
++		KS_CODE(kp->ks_flag) = kcode;
+ 		KS_INTERP(kp->ks_flag) = KS_KANJI;
+-		enkanji(cc, (c1>>8)&0x7f, c1&0x7f);
+-		putq(cc);
+-		continue;
+-	      }
+-	      p--;
+-	    }
+-	  } else if (cc < 0xe0) {
+-	    /*
+-	     * may be 1st byte of UJIS KANJI
+-	     * or KANA of SJIS
+-	     */
+-	    if (KS_CODE(kp->ks_flag) == KS_UJIS ||
+-		KS_INTERP(kp->ks_flag) == KS_UKANJI) {
+-	      KS_CODE(kp->ks_flag) = KS_UJIS;
+-	      if (n < 1) {
+-		/* broken */
+-		kp->ks_buf[0] = cc;
+-		continue;
+ 	      }
+-	      c1 = *p++ & 0xff;
+-	      if (c1 & 0x80 && (c1 & 0x7f) > ' ' && (c1 & 0x7f) < 0x7f) {
+-		KS_INTERP(kp->ks_flag) = KS_KANJI;
+-		n--;
+-		enkanji(cc, cc&0x7f, c1&0x7f);
+-		putq(cc);
+-		continue;
++	    } else {
++	      if (n <= (sizeof(kp->ks_queue) - kp->ks_ql * sizeof(int)) &&
++		  !(kp->ks_gstate & KST_STATE)) {
++		 /* Enough area rest in kp->ks_queue, and we have not already
++		    have buffered bytes */
++		memcpy((void *)tailof(kp->ks_queue) - n, p, n);
++		 /* unbuffering done, so escape from the loop */
++		kp->ks_ul = n, n = 0; continue;
+ 	      }
+-	      p--;
+ 	    }
+-	    if (KS_CODE(kp->ks_flag) == KS_SJIS ||
+-		KS_INTERP(kp->ks_flag) == KS_UKANJI) {
+-	      KS_CODE(kp->ks_flag) = KS_SJIS;
++
++	    n--, p++;
++	  }
++
++	  if ((0xa1 <= cc && cc <= 0xfe || cc == SSHFT2) &&
++	      (KS_CODE(kp->ks_flag) == KS_UJIS ||
++	       KS_INTERP(kp->ks_flag) == KS_UKANJI)) {
++	       /* May be 1st byte of UJIS kanji (including SSHFT2) */
++	    KS_CODE(kp->ks_flag) = KS_UJIS;
++	    if (n < 1) {
++	       /* broken */
++	      kp->ks_buf[0] = cc;
++	      kp->ks_bl = 1;
++	      continue;
++	    }
++	    c1 = *p++ & 0xff;
++	    if (c1 & 0x80 && !iscntrl(c1 & 0x7f)) {
+ 	      KS_INTERP(kp->ks_flag) = KS_KANJI;
+-	      enkana(cc, cc&0x7f);
++	      n--;
++	      cc == SSHFT2 ? 
++	        enkana(cc, c1&0x7f) : enkanji(cc, cc&0x7f, c1&0x7f);
+ 	      putq(cc);
+ 	      continue;
+ 	    }
+-	  } else {
+-	    /*
+-	     * may be UJIS kanji or SJIS kanji
+-	     */
+-	    if (KS_CODE(kp->ks_flag) == KS_UJIS ||
+-		KS_INTERP(kp->ks_flag) == KS_UKANJI) {
+-	      KS_CODE(kp->ks_flag) = KS_UJIS;
++	    p--;
++	  }
++	  if (KS_CODE(kp->ks_flag) == KS_SJIS ||
++	      KS_INTERP(kp->ks_flag) == KS_UKANJI) {
++	    KS_CODE(kp->ks_flag) = KS_SJIS;
++	    if (0xa0 <= cc && cc <= 0xdf) { /* SJIS KANA */
++	      KS_INTERP(kp->ks_flag) = KS_KANJI;
++	      enkana(cc, cc&0x7f);
++	      putq(cc);
++	      continue;
++	    } else { /* May be 1st byte of SJIS kanji */
+ 	      if (n < 1) {
+-		/* broken */
++		 /* broken */
+ 		kp->ks_buf[0] = cc;
++		kp->ks_bl = 1;
+ 		continue;
+ 	      }
+ 	      c1 = *p++ & 0xff;
+-	      if (c1 & 0x80 && (c1 & 0x7f) > ' ' && (c1 & 0x7f) < 0x7f) {
+-		KS_INTERP(kp->ks_flag) = KS_KANJI;
++	      if (!iscntrl(c1) && ((c1 |= (cc << 8)), !stoj(&c1, &c1))) {
+ 		n--;
+-		enkanji(cc, cc&0x7f, c1&0x7f);
++		KS_INTERP(kp->ks_flag) = KS_KANJI;
++		if (c1 & 0x8000) putq(SSHFT3); /* treat as ujis hojo-kanji
++		 (but kemacs actually does not support hojo-kanji) */
++		enkanji(cc, (c1>>8)&0x7f, c1&0x7f);
+ 		putq(cc);
+ 		continue;
+ 	      }
+ 	      p--;
+ 	    }
+-	    if (KS_CODE(kp->ks_flag) == KS_SJIS ||
+-		KS_INTERP(kp->ks_flag) == KS_UKANJI) {
+-	      KS_CODE(kp->ks_flag) = KS_SJIS;
+-	      if (n < 1) {
+-		/* broken */
+-		kp->ks_buf[0] = cc;
++	  }
++#if HANDLE_UTF
++	  if (KS_CODE(kp->ks_flag) == KS_UTF8 ||
++	      KS_INTERP(kp->ks_flag) == KS_UKANJI) {
++	    int n1 = utf8_restbytes(cc) + 1;
++	    if (n1 > 1) {
++	      p--, n++;
++
++	      KS_CODE(kp->ks_flag) = KS_UTF8;
++	      if (n < n1) {
++		 /* broken */
++		int *q = kp->ks_buf;
++		kp->ks_bl = n;
++		while (n--) *q++ = *p++ & 0xff;
+ 		continue;
+ 	      }
+-	      c1 = *p++ & 0xff;
+-	      if (!iscntrl(c1) && ((c1 |= (cc << 8)), !stoj(&c1, &c1))) {
+-		n--;
++	      if ((cc = utf8_to_internal(p, n1)) != -1) {
++		 /* conversion succeed */
++		p += n1, n -= n1;
+ 		KS_INTERP(kp->ks_flag) = KS_KANJI;
+-		enkanji(cc, (c1>>8)&0x7f, c1&0x7f);
++		if (cc & 0x8000) cc &= ~0x8000, putq(SSHFT3);
+ 		putq(cc);
+ 		continue;
+ 	      }
+-	      p--;
++	       /* in this case, unlike in other kanji codes,
++		  output all illegal bytes */
++	      while (n1--) putq(*p++ & 0xff), n--;
++	      continue;
+ 	    }
+ 	  }
++#endif /* HANDLE_UTF */
+ 	}
+ 	if (iscntrl(cc)) {
+ 	  putq(cc);
+ 	  continue;
+ 	}
+ 	if (KS_CODE(kp->ks_flag) == KS_JIS && cc > ' ' && cc < 0x7f) {
+-	  if (kp->ks_gstate & KANA) {
++	  if (kp->ks_gstate & (KANA | G1KANA)) {
+ 	    /* Kana precedes Kanji */
+ 	    enkana(cc, cc&0x7f);
+ 	    putq(cc);
+ 	    continue;
+ 	  }
+-	  if (kp->ks_gstate & KANJI) {
++	  if (kp->ks_gstate & JKANJI) {
+ 	    /* get second byte */
+ 	    if (n < 1) {
+ 	      /* kanji code is broken. */
+ 	      kp->ks_buf[0] = cc;
++	      kp->ks_bl = 1;
+ 	      continue;
+ 	    }
+ 	    c1 = *p++ & 0x7f; /* !THRU assumed */
+@@ -302,9 +712,6 @@
+ 	putq(cc);
+ 	continue;
+       case ESC:
+-      case ESC | KANJI:
+-      case ESC | KANA:
+-      case ESC | KANJI | KANA:
+ 	/* got ESC */
+ 	kp->ks_gstate -= ESC;
+ 	if (cc == '$') {
+@@ -320,35 +727,39 @@
+ 	putq(cc);
+ 	continue;
+ 	
+-      case ESC_DOL:
+-      case ESC_DOL | KANJI:
+-      case ESC_DOL | KANA:
+-      case ESC_DOL | KANJI | KANA:
+-	/* got ESC $ */
+-	kp->ks_gstate -= ESC_DOL;
++      case ESC_DOL: case ESC_DOL_PAR:
++	/* got ESC $ or ESC $ ( */
++	kp->ks_gstate &= ~ESC_STATE;
++	if (kst == ESC_DOL && cc == '(') {
++	  kp->ks_gstate += ESC_DOL_PAR;
++	  continue;
++	}
+ 	if (cc == '@' || cc == 'B') {
+ 	  KS_INTERP(kp->ks_flag) = KS_KANJI;
+-	  kp->ks_gstate |= KANJI;
++	  kp->ks_gstate &= ~(JKANJI|KANA), kp->ks_gstate |= JKANJI;
+ 	  KS_KI(kp->ks_flag) = (cc == '@')? KS_OLDJIS: KS_NEWJIS;
+ 	  continue;
+ 	}
+ 	/* other ESC sequence. pass through */
+ 	putq(ESCAPE);
++	if (kst == ESC_DOL_PAR) putq('(');
+ 	putq('$');
+ 	putq(cc);
+ 	continue;
+       case ESC_PAR:
+-      case ESC_PAR | KANJI:
+-      case ESC_PAR | KANA:
+-      case ESC_PAR | KANJI | KANA:
+ 	/* got ESC ( */
+ 	kp->ks_gstate -= ESC_PAR;
+ 	if (cc == 'A' || cc == 'B' || cc == 'J' || cc == 'H') {
+ 	  KS_INTERP(kp->ks_flag) = KS_KANJI;
+-	  kp->ks_gstate &= ~KANJI;
++	  kp->ks_gstate &= ~(JKANJI|KANA);
+ 	  KS_RI(kp->ks_flag) = (cc <= 'B')? KS_ASCII: KS_ROMAJI;
+ 	  continue;
+ 	}
++	if (cc == 'I'){
++	  KS_INTERP(kp->ks_flag) = KS_KANJI;
++	  kp->ks_gstate &= ~(JKANJI|KANA), kp->ks_gstate |= KANA;
++	  continue;
++	}
+ 	/* other ESC sequence. pass through */
+ 	putq(ESCAPE);
+ 	putq('(');
+diff -ruN kemacs-2.1k.orig/kanji/kopen.c kemacs-2.1k/kanji/kopen.c
+--- kemacs-2.1k.orig/kanji/kopen.c	1993-07-07 10:06:26.000000000 +0900
++++ kemacs-2.1k/kanji/kopen.c	2012-11-25 00:37:11.000000000 +0900
+@@ -1,14 +1,11 @@
+ #include "kanji.h"
+-#include "../econfig.h"
+-#if BSD
++#if HAVE_SELECT
+ # include <sys/ioctl.h>
+ # include <sys/time.h>
+-# include <sys/errno.h>
+-#endif
+-#if USG
++#else
+ # include <signal.h>
+-# include <errno.h>
+ #endif
++#include <errno.h>
+ 
+ /*
+  * open Kanji stream on opened file stream fp.
+@@ -18,17 +15,26 @@
+ 
+ struct KF {
+ 	FILE *fp;			/* associated FILE pointer */
+-#if BSD
++#if HAVE_SELECT
+ 	struct timeval tm;	/* ESC timeout (passed to select) */
+-#endif
+-#if USG
++#else
+ 	unsigned tm;		/* passed to alarm */
+-	int (*ac)();		/* last alarm handler */
++	SIGRET_T (*ac)();		/* last alarm handler */
+ 	unsigned lt;		/* last alarm count rest */
+ #endif
+ 	int lastesc;		/* last input was ESC */
+ };
+ 
++static int f_open(), f_close(), f_get(), f_put();
++
++#if !HAVE_SELECT
++/* ARGSUSED */
++static SIGRET_T
++alarm_catcher(SIGARG_T(dummy))
++{
++}
++#endif
++
+ KFILE *
+ kopen(fp, flag, totime)
+ 	FILE *fp;
+@@ -37,17 +43,14 @@
+ {
+ 	register KSTREAM *kp;
+ 	register struct KF *kfp;
+-	extern char *malloc();
+-	int f_open(), f_close(), f_get(), f_put();
+ 
+ 	if (!fp
+ 	    || !(kfp = (struct KF *)malloc(sizeof(struct KF)))) return NULL;
+ 	kfp->fp = fp;
+-#if BSD
++#if HAVE_SELECT
+ 	kfp->tm.tv_sec = totime/1000;
+ 	kfp->tm.tv_usec = (totime % 1000) * 1000;
+-#endif
+-#if USG
++#else
+ 	kfp->tm = totime? 1: 0;
+ #endif
+ 	if (!(kp = kalloc((caddr_t)kfp, f_open, f_close, f_get, f_put, flag)))
+@@ -78,52 +81,51 @@
+ 	int len;
+ {
+ 	register int n;
++#if 0
+ 	extern int errno;
++#endif
+ 
+ 	if (id->lastesc) {
+ 		/* check timeout */
+-#if BSD
++#if HAVE_SELECT
+ 		if (id->tm.tv_usec || id->tm.tv_sec) {
+-			int r;
++			fd_set r;
++			struct timeval tm;
++
+ 		    retry:
+-			r = (1<<(fileno(id->fp)));
+-			n = select(32, &r, (int *)NULL, (int *)NULL, &id->tm);
++		    	FD_ZERO(&r);
++		    	FD_SET(fileno(id->fp), &r);
++			tm.tv_usec = id->tm.tv_usec;
++			tm.tv_sec = id->tm.tv_sec;
++			 /* explicitly set timeout content
++			    each time select() is called */
++			n = select(fileno(id->fp)+1, &r, NULL, NULL, &tm);
+ 			if (!n) return 0;
+ 			if (n < 0) {
+ 				if (errno == EINTR) goto retry;
+ 				return -1;
+ 			}
+ 		}
+-#endif
+-#if USG
++#else /* !HAVE_SELECT */
+ 		if (id->tm) {
+-			int alarm_catcher();
+-
+ 			id->ac = signal(SIGALRM, alarm_catcher);
+ 			id->lt = alarm(id->tm);
+ 		}
+-#endif /*USG*/
++#endif
+ 	}
+ 	n = read(fileno(id->fp), buf, len);
+-#if USG
+ 	if (n < 0 && errno == EINTR) {
+ 		/* timed out */
++#if !HAVE_SELECT
+ 		(void)signal(SIGALRM, id->ac);
+ 		(void)alarm(id->lt);
++#endif
+ 		return 0;
+ 	}
+-#endif /*USG*/
+ 	id->lastesc = (n > 0 && buf[n-1] == ESCAPE);
+ 	return (n<=0)? -1: n;
+ }
+ 
+-#if USG
+-static int
+-alarm_catcher()
+-{
+-}
+-#endif
+-
+ static int
+ f_put(id, buf, len)
+ 	struct KF *id;
+diff -ruN kemacs-2.1k.orig/kanji/kputc.c kemacs-2.1k/kanji/kputc.c
+--- kemacs-2.1k.orig/kanji/kputc.c	1993-07-07 10:06:57.000000000 +0900
++++ kemacs-2.1k/kanji/kputc.c	2012-11-25 14:47:38.000000000 +0900
+@@ -1,21 +1,56 @@
+ #include <stdio.h>
+ #include "kanji.h"
++#define OBFSIZ	32	/* enough size for conversion from internal expression
++			   to output stream */
+ 
+ /*
+  * kputc:	put 16-bit KANJI codes to the file stream in 7-bit format.
+  */
+ 
+ #define NORMAL	0
+-#define KANJI	1
++#define JKANJI	1
+ #define KANA	2
+ 
++#if HANDLE_UTF
++static int
++ujis_to_utf8(q, n1, pp, l1) /* ujis 1 letter to utf8 */
++	char *q; char **pp;
++	int n1, l1;
++{
++	static iconv_t cd = (iconv_t)(-1), cd2;
++	size_t l = l1 /* must be >=MAX_U8LEN */, n = n1;
++
++	if (cd == (iconv_t)(-1)) {
++		cd = iconv_open("UTF-8", "EUC-JP"); /* EUC-JP -> UTF-8 */
++		if (cd == (iconv_t)(-1)) {
++			puts("iconv_open() failed ... Why?\n"); exit(1);
++		}
++		cd2 = iconv_open("UTF-8", "EUC-JISX0213");
++		 /* EUC-JISX0213 -> UTF-8 */
++	}
++
++	if (-1 != Iconv(cd, &q, &n, pp, &l)) return 1; /* *pp proceeded */
++	if (cd2 != (iconv_t)(-1) &&
++	    -1 != Iconv(cd2, &q, &n, pp, &l)) return 1; /* *pp proceeded */
++	/* failed (e.g. q doesn't correspond to existing ujis kanji) */
++	while (n--) { /* ad hoc */
++		if (*q & 0x80) {
++			*(*pp)++ = (*q >> 6) & 0x3 | 0xc0;
++			*(*pp)++ = *q++ & 0x3f | 0x80;
++		} else
++			*(*pp)++ = *q++;
++	}
++	return 0;
++}
++#endif
++
+ kputc(c, kp)
+ 	register int c;
+ 	register KSTREAM *kp;
+ {
+ 	int cc;
+-	static char buf[BUFSIZ];
+-	register char *p = buf;
++	char buf[OBFSIZ]; /* should be enough */
++	char *p = buf;
+ 
+ 	if (!kp->ks_putf) return EOF;
+ 	if (c == EOF) {
+@@ -25,7 +60,7 @@
+ 	    if (kp->ks_pstate & KANA) {
+ 	      *p++ = SHFTIN;
+ 	    }
+-	    if (kp->ks_pstate & KANJI) {
++	    if (kp->ks_pstate & JKANJI) {
+ 	      *p++ = ESCAPE;
+ 	      *p++ = '(';
+ 	      *p++ = KS_RI(kp->ks_flag) == KS_ROMAJI? 'J':
+@@ -48,12 +83,12 @@
+ 			if (kp->ks_pstate & KANA) {
+ 				*p++ = SHFTIN;
+ 			}
+-			if (!(kp->ks_pstate & KANJI)) {
++			if (!(kp->ks_pstate & JKANJI)) {
+ 			  *p++ = ESCAPE;
+ 			  *p++ = '$';
+ 			  *p++ = (KS_KI(kp->ks_flag) == KS_NEWJIS)? 'B': '@';
+ 			}
+-			kp->ks_pstate = KANJI;
++			kp->ks_pstate = JKANJI;
+ 			dekanji(c, *p, p[1]);
+ 			p += 2;
+ 			break;
+@@ -69,6 +104,18 @@
+ 			*p++ = (cc >> 8) & 0xff;
+ 			*p++ = cc & 0xff;
+ 			break;
++#if HANDLE_UTF
++		case KS_UTF8:
++			{
++				char tmpi[2], *q = tmpi;
++				dekanji(c, *q, q[1]);
++				*q++ |= 0x80;
++				*q |= 0x80;
++				ujis_to_utf8(tmpi, 2, &p, OBFSIZ);
++				 /* p proceeds */
++			}
++			break;
++#endif
+ 		}
+ 	} else if (iskana(c)) {
+ 		switch (KS_CODE(kp->ks_flag)) {
+@@ -89,6 +136,18 @@
+ 			dekana(c, *p);
+ 			*p++ |= 0x80;
+ 			break;
++#if HANDLE_UTF
++		case KS_UTF8:
++			{
++				char tmpi[2], *q = tmpi;
++				*q++ = SSHFT2;
++				dekana(c, *q);
++				*q |= 0x80;
++				ujis_to_utf8(tmpi, 2, &p, OBFSIZ);
++				 /* p proceeds */
++			}
++			break;
++#endif
+ 		}
+ 	} else {
+ 		/* ascii (including control) characters */
+@@ -96,7 +155,7 @@
+ 			if (kp->ks_pstate & KANA) {
+ 				*p++ = SHFTIN;
+ 			}
+-			if (kp->ks_pstate & KANJI) {
++			if (kp->ks_pstate & JKANJI) {
+ 			  *p++ = ESCAPE;
+ 			  *p++ = '(';
+ 			  *p++ = KS_RI(kp->ks_flag) == KS_ROMAJI? 'J':
+@@ -104,7 +163,25 @@
+ 			}
+ 			kp->ks_pstate = NORMAL;
+ 		}
+-		*p++ = c;
++		switch(c){
++		case '\n': /* EOL treatment (Added by Nide) */
++			switch (KS_EOL(kp->ks_flag)) {
++			case KS_LF:
++				*p++ = c;
++				break;
++			case KS_CR:
++				*p++ = '\r';
++				break;
++			case KS_CRLF:
++				*p++ = '\r';
++				*p++ = c;
++				break;
++			}
++			break;
++		default:
++			*p++ = c;
++			break;
++		}
+ 	}
+ 	(void)(*kp->ks_putf)(kp->ks_id, buf, p-buf);
+ 	return c;
+diff -ruN kemacs-2.1k.orig/kanji/stoj.c kemacs-2.1k/kanji/stoj.c
+--- kemacs-2.1k.orig/kanji/stoj.c	1993-07-07 10:07:26.000000000 +0900
++++ kemacs-2.1k/kanji/stoj.c	2012-11-25 00:37:11.000000000 +0900
+@@ -11,6 +11,8 @@
+ 	register int sh = ((*s >> 8) & 0377), sl = (*s & 0377);
+ 	register int jh, jl;
+ 
++	if (!(0x81 <= sh && (sh <= 0x9f || (0xe0 <= sh && sh <= 0xfc))) ||
++	    !(0x40 <= sl && sl <= 0xfc && sl != 0x7f)) return 1;
+ 	jh = ((sh - ((sh >= 0xa0)? 0xc1: 0x81)) << 1)+0x21;
+ 	if (sl >= 0x9f) {
+ 		jh++;
+@@ -18,6 +20,8 @@
+ 	} else {
+ 		jl = sl - ((sl <= 0x7e) ? 0x1f : 0x20);
+ 	}
++	if (jh > 0x7e) /* in this case, 0x8000 bit of return value is set */
++		jh += (jh<=0x83 && jh!=0x80 ? 0x22 : jh<=0x87 ? 0x28 : 0x66);
+ 	*j = (jh << 8) | jl;
+ 	return 0;
+ }
+diff -ruN kemacs-2.1k.orig/kanji.C_ kemacs-2.1k/kanji.C_
+--- kemacs-2.1k.orig/kanji.C_	1990-09-21 21:52:32.000000000 +0900
++++ kemacs-2.1k/kanji.C_	2012-11-25 10:46:41.000000000 +0900
+@@ -79,12 +79,7 @@
+ #endif
+ 
+ #if	!STRASSOK
+-# if	BSD
+-  (void)bcopy((char *)&term.t_code, (char *)&icode, sizeof(icode));
+-# endif
+-# if	USG
+   (void)memcpy((char *)&icode, (char *)&term.t_code, sizeof(icode));
+-# endif
+ #endif	/*!STRASSOK*/
+   if (KS_INTERP(icode) != KS_BINARY && KS_CODE(icode) == KS_JIS) {
+     /* pass ^O/^N for input */
+@@ -120,7 +115,6 @@
+ safeC(C)
+ 	Char *C;
+ {
+-	char *malloc();
+ 	register Char *CC;
+ 
+ 	if (!(CC = (Char *)malloc((unsigned)(Cstrlen(C)+1)*sizeof(Char))))
+@@ -132,7 +126,6 @@
+ safec(c)
+ 	char *c;
+ {
+-	char *malloc();
+ 	register char *cc;
+ 
+ 	if (!(cc = malloc((unsigned)strlen(c)+1)))
+diff -ruN kemacs-2.1k.orig/kemacs.man kemacs-2.1k/kemacs.man
+--- kemacs-2.1k.orig/kemacs.man	1990-09-21 21:52:33.000000000 +0900
++++ kemacs-2.1k/kemacs.man	2012-11-25 00:37:11.000000000 +0900
+@@ -26,17 +26,20 @@
+ invokes \fBrestricted\fR version of \fIkemacs\fR.
+ With this flag on, \fIkemacs\fR's functions are restricted so that
+ only the files which are specified in the command line can be edited.
+-.IP \-{ft}[{jJus}]
++.IP \-{ft}[{jJeuswlcd}]
+ specifies the default code system (j for JIS, J for JIS with 8bit
+-through, u for UJIS(EUC) and s for SJIS)
+-for each device (f for files and t for terminal).  For files, 8bit
++through, e or u for UJIS(EUC-JP), s for SJIS and w for UTF8)
++or the default EOL type (l for LF, c for CR and d for DOS type CRLF)
++for each device (f for files and t for terminal).
++EOL type can be specified only for files, not for terminal.
++For files, 8bit
+ through is always assumed.
+ Each specification can also be altered dynamically in the session.
+ The detail of JIS code (i.e. shift sequences) can't be specified from
+ command line option. Default is configuration dependent.
+ .IP
+ Specifying first character only (either f or t) results in BINARY mode being disabled.
+-In this case, code specifications are not changed.
++In this case, code and EOL specifications are not changed.
+ .IP -g\fIline\fR
+ specifies the line number of first file in the command line.
+ .I Kemacs
+@@ -62,9 +65,9 @@
+ .SH FILES
+ .IP ~/.kemacsrc
+ standard start-up macro.
+-.IP LIBDIR/.kemacsrc
++.IP /usr/local/lib/kemacs/.kemacsrc
+ used when ~/.kemacsrc does not exist.
+-.IP LIBDIR/emacs.hlp
++.IP /usr/local/lib/kemacs/emacs.hlp
+ help file.
+ .SH AUTHORS
+ .IP "D. M. Lawrence"
+diff -ruN kemacs-2.1k.orig/kpp/Makefile.kpp kemacs-2.1k/kpp/Makefile.kpp
+--- kemacs-2.1k.orig/kpp/Makefile.kpp	1993-07-07 09:45:00.000000000 +0900
++++ kemacs-2.1k/kpp/Makefile.kpp	2012-11-25 00:37:11.000000000 +0900
+@@ -1,3 +1,5 @@
++CC	= cc
++
+ HDRS	= kpp.h
+ 
+ SRCS	= kpp.c ftoc.c
+@@ -7,17 +9,17 @@
+ CCFLAGS	= -O
+ INCL	= -I../kanji -I../Cstrings
+ DEFS	=
+-CFLAGS	= $(CCFLAGS) $(DEFS) $(INCL)
++CFLAGS	= $(CCFLAGS) $(DEFS) $(INCL) $(EINCL)
+ 
+ LIBS	= ../Cstrings/Cstrings.a ../kanji/kanji.a
+ 
+ all: kpp ftoc
+ 
+ kpp: kpp.c $(LIBS)
+-	cc -o kpp $(CFLAGS) kpp.c $(LIBS)
++	$(CC) -o kpp $(CFLAGS) kpp.c $(LIBS) $(ILIBS)
+ 
+ ftoc: ftoc.c $(LIBS)
+-	cc -o ftoc $(CFLAGS) ftoc.c $(LIBS)
++	$(CC) -o ftoc $(CFLAGS) ftoc.c $(LIBS) $(ILIBS)
+ 
+ clean:;	@rm -f $(OBJS)
+ 
+diff -ruN kemacs-2.1k.orig/kpp/kpp.c kemacs-2.1k/kpp/kpp.c
+--- kemacs-2.1k.orig/kpp/kpp.c	1990-09-19 17:44:06.000000000 +0900
++++ kemacs-2.1k/kpp/kpp.c	2012-11-25 02:13:01.000000000 +0900
+@@ -8,11 +8,16 @@
+ # include <sys/file.h>
+ #endif
+ #if	USG
+-# define L_SET	0
+-# define L_INCR	1
+-# define L_XTND	2
+ # include <memory.h>
+-# define bcmp	memcmp
++#endif
++#ifndef SEEK_SET
++# define SEEK_SET L_SET		
++# define SEEK_CUR L_INCR		
++# define SEEK_END L_XTND		
++#endif
++
++#if BSD_LEGACY
++# define memcmp bcmp
+ #endif
+ 
+ #define MARKER_HEAD	'C'
+@@ -50,6 +55,12 @@
+ 		case 'S':
+ 			fcode = KS_SJIS;
+ 			break;
++#if HANDLE_UTF
++		case 'w':
++		case 'W':
++			fcode = KS_UTF8;
++			break;
++#endif
+ 		default:
+ 			usage("Illegal option");
+ 			exit(1);
+@@ -94,8 +105,10 @@
+ 	KS_VALUE(flag) = 0;
+ 	KS_THRU(flag) = 1;		/* thru 8bit */
+ 	KS_INTERP(flag) = KS_KANJI;	/* KANJI code */
+-	KS_CODE(flag) = fcode;		/* JIS/UJIS/SJIS */
++	KS_CODE(flag) = fcode;		/* JIS/UJIS/SJIS/UTF8 */
+ 	KS_PASS(flag) = 0;		/* process ^O/^N */
++	KS_EOLINT(flag) = KS_EOLKNOWN;	/* EOL type is fixed on KS_LF */
++	KS_EOL(flag) = KS_LF;		/* fixed on KS_LF */
+ 	if (!(kp = kopen(fi, KS_VALUE(flag), 0))) {
+ 		fprintf(stderr, "Can't open KANJI stream on the file.\n");
+ 		return 1;
+@@ -105,7 +118,8 @@
+ 		return 1;
+ 	}
+ 	fprintf(fo, "#ifndef %s\n", ARFLAG);
+-	fprintf(fo, "%s %s[];\n", ARTYPE, ARNAME);
++	fprintf(fo, "extern %s %s[];\n", ARTYPE, ARNAME);
++	 /* added 'extern' by N.Nide */
+ 	fprintf(fo, "#define %s\n", ARFLAG);
+ 	fprintf(fo, "#endif /*%s*/\n", ARFLAG);
+ 	while (kreadln(kp, buf, BUFSIZ) > 0) {
+@@ -250,7 +264,6 @@
+ addstr()
+ {
+ 	static char fbuf[BUFSIZ*2], dbuf[BUFSIZ*2];
+-	char *malloc(), *realloc();
+ 	register int i;
+ 	register Char *p;
+ 
+@@ -262,7 +275,7 @@
+ 			fprintf(stderr, "can't create %s.\n", DFNAME);
+ 			exit(1);
+ 		}
+-		if (fseek(dfp, 0, L_SET) < 0) {
++		if (fseek(dfp, 0, SEEK_SET) < 0) {
+ 			fprintf(stderr, "seek error!\n");
+ 			exit(1);
+ 		}
+@@ -303,7 +316,7 @@
+ 			register off_t off = stab[i]-Cblen*2;
+ 			int n;
+ 
+-			if (fseek(dfp, off, L_SET) < 0) {
++			if (fseek(dfp, off, SEEK_SET) < 0) {
+ 				fprintf(stderr, "seek error!\n");
+ 				exit(1);
+ 			}
+@@ -311,14 +324,14 @@
+ 				fprintf(stderr, "read error! expected %d, read %d\n", Cblen, n);
+ 				exit(1);
+ 			}
+-			if (bcmp(dbuf, fbuf, Cblen*2) == 0) {
++			if (memcmp(dbuf, fbuf, Cblen*2) == 0) {
+ 				/* same string found */
+ 				return off/2;	/* index is half of offset */
+ 			}
+ 		}
+ 	}
+ 	/* blanc new string. add to file */
+-	if (fseek(dfp, 0, L_XTND) < 0) {
++	if (fseek(dfp, 0, SEEK_END) < 0) {
+ 		fprintf(stderr, "seek error!\n");
+ 		exit(1);
+ 	}
+diff -ruN kemacs-2.1k.orig/line.C_ kemacs-2.1k/line.C_
+--- kemacs-2.1k.orig/line.C_	1990-09-21 21:52:34.000000000 +0900
++++ kemacs-2.1k/line.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -35,7 +35,7 @@
+ 		== NULL) {
+ 		mlwrite(
+ #if KANJI
+-		    kterminal? CSTR("%d $B%P%$%H$r3dIU$1$G$-$^$;$s(J"):
++		    kterminal? CSTR("%d $B%P%$%H$r3d$jIU$1$G$-$^$;$s(J"):
+ #endif
+ 		    CSTR("Cannot allocate %d bytes"), size);
+ 		return (NULL);
+diff -ruN kemacs-2.1k.orig/main.C_ kemacs-2.1k/main.C_
+--- kemacs-2.1k.orig/main.C_	1993-07-07 10:08:10.000000000 +0900
++++ kemacs-2.1k/main.C_	2012-11-25 14:28:47.000000000 +0900
+@@ -55,12 +55,15 @@
+ 
+     /* initialize the editor and process the command line arguments */
+     (void)Cstrcpy(bname, CSTR("main")); /* default buffer name */
++    gmodeline = safeC(gmodeline); /* fix by N.Nide;
++				   not to free initial value of gmodeline */
+     vtinit();			/* Displays.		*/
+     edinit(bname);		/* Buffers, windows.	*/
+     varinit();			/* user variables	*/
+ #if	CLOCK
+     clinit();			/* initialize timer	*/
+ #endif
++    int noopt = FALSE;		/* do not handle option arguments */
+     viewflag = FALSE;		/* view mode defaults off in command line */
+     gotoflag = FALSE;		/* set to off to begin with */
+     searchflag = FALSE;		/* set to off to begin with */
+@@ -76,7 +79,7 @@
+ #if	KANJI
+ # if defined(DEF_F_CODE)
+     KS_INTERP(kcode) = KS_KANJI;
+-    KS_CODE(kcode) = DEF_F_CODE;
++    KS_CODE(kcode) = langcode(DEF_F_CODE);
+ #  if defined(DEF_F_KI) && defined(DEF_F_RI) /* in the case of JIS */
+     KS_KI(kcode) = DEF_F_KI;
+     KS_RI(kcode) = DEF_F_RI;
+@@ -84,15 +87,28 @@
+ # else /* !defined(DEF_F_CODE) */
+     KS_INTERP(kcode) = KS_BINARY;
+ # endif /* !defined(DEF_F_CODE) */
++    KS_EOLINT(kcode) = KS_EOLKNOWN;
++# if defined(DEF_F_EOL)
++    KS_EOL(kcode) = DEF_F_EOL;
++# else
++    KS_EOL(kcode) = KS_LF;
++# endif
+     curwp->w_bufp->b_code = kcode;
+ #endif /* KANJI */
+ 
+     /* scan through the command line and get the files to edit */
+     for (carg = 1; carg < argc; ++carg) {
++	if (noopt) {
++	    goto regular_arg; /* do not handle option arguments */
++	} else
++	if (strcmp(argv[carg], "--") == 0) {
++	    noopt = TRUE;
++	} else
+ 	/* if its a switch, process it */
+ 	if (argv[carg][0] == '-') {
+ #if	KANJI
+ 	    KS_FLAG *cp;
++	    char *argp;
+ #endif
+ 
+ 	    switch (argv[carg][1]) {
+@@ -128,27 +144,47 @@
+ 		break;
+ #endif
+ #if	KANJI
+-	      case 'b':
+-	      case 'B':
++	    case 'b':
++	    case 'B':
+ 		gmode |= MDBINARY;
+ 		break;
+-	      case 't': case 'T':
+-	      case 'f': case 'F':
++	    case 't': case 'T':
++	    case 'f': case 'F':
+ 		gmode &= ~MDBINARY;
+-		cp = (argv[carg][1] == 't' || argv[carg][1] == 'T')?
+-			&term.t_code: &kcode;
+-		switch (argv[carg][2]) {
+-		case 'j': case 'J':
+-		  KS_CODE(*cp) = KS_JIS;
+-		  if (cp == &term.t_code)
+-		  	KS_THRU(*cp) = argv[carg][2] == 'J';
+-		  break;
+-		case 'u': case 'U':
+-		  KS_CODE(*cp) = KS_UJIS;
+-		  break;
+-		case 's': case 'S':
+-		  KS_CODE(*cp) = KS_SJIS;
+-		  break;
++		argp = &argv[carg][1];
++		cp = (*argp == 't' || *argp == 'T') ? &term.t_code : &kcode;
++		for (; *argp; argp++) {
++		    switch (*argp) {
++		    case 'j': case 'J':
++			KS_CODE(*cp) = KS_JIS;
++			if (cp == &term.t_code) KS_THRU(*cp) = (*argp == 'J');
++			continue;
++		    case 'u': case 'U':
++		    case 'e': case 'E': /* e/E added by N.Nide */
++			KS_CODE(*cp) = KS_UJIS;
++			continue;
++		    case 's': case 'S':
++			KS_CODE(*cp) = KS_SJIS;
++			continue;
++#if HANDLE_UTF
++		    case 'w': case 'W':
++			KS_CODE(*cp) = KS_UTF8;
++			continue;
++#endif
++		    }
++		     /* EOL type settings are only for file IO;
++			not for terminal */
++		    if(cp == &kcode) switch(*argp){
++		    case 'l': case 'L':
++			KS_EOL(kcode) = KS_LF;
++			break;
++		    case 'c': case 'C':
++			KS_EOL(kcode) = KS_CR;
++			break;
++		    case 'd': case 'D': /* DOS type EOL */
++			KS_EOL(kcode) = KS_CRLF;
++			break;
++		    }
+ 		}
+ 		if (cp == &kcode) {
+ 		    curwp->w_bufp->b_code = kcode;
+@@ -188,6 +224,7 @@
+ 		startf = TRUE;	/* don't execute emacs.rc */
+ 	    Free(p);
+ 	} else {
++	regular_arg:
+ 	    /* process a file name */
+ 	    /* if we haven't run emacs.rc, do it now */
+ 	    if (startf == FALSE) {
+@@ -264,7 +301,7 @@
+ 	update(FALSE);
+ 	mlwrite(
+ #if KANJI
+-	    kterminal? CSTR("[$B%5!<%A$H0\F0$OF1;~$K$O;XDj$G$-$^$;$s!*(J]"):
++	    kterminal? CSTR("[$B%5!<%A$H0\F0$OF1;~$K$O;XDj$G$-$^$;$s(J!]"):
+ #endif
+ 	    CSTR("[Cannot search and goto at the same time!]"));
+     } else if (gotoflag) {
+@@ -332,12 +369,12 @@
+ 
+ 	    /* do META-# processing if needed */
+ 	    basec = c & ~META;		/* strip meta char off if there */
+-	    if ((c & META) && (isdigit(basec) || basec == '-')) {
++	    if ((c & META) && (isDigit(basec) || basec == '-')) {
+ 		f = TRUE;		/* there is a # arg */
+ 		n = 0;			/* start with a zero default */
+ 		mflag = 1;		/* current minus flag */
+ 		c = basec;		/* strip the META */
+-		while (isdigit(c) || (c == '-')) {
++		while (isDigit(c) || (c == '-')) {
+ 		    if (c == '-') {
+ 			/* already hit a minus or digit? */
+ 			if (mflag < 0 || n > 0)
+@@ -375,7 +412,7 @@
+ 		    kterminal? CSTR("$B0z?t(J: 4"):
+ #endif
+ 		    CSTR("Arg: 4"));
+-		while (c = getcmd(), isdigit(c) || c==reptc || c=='-'){
++		while (c = getcmd(), isDigit(c) || c==reptc || c=='-'){
+ 		    if (c == reptc) {
+ 			if ((n > 0) == ((n*4) > 0)) {
+ 			    /* no overflow */
+@@ -461,6 +498,7 @@
+ 	wp = (WINDOW *) malloc(sizeof(WINDOW)); /* First window		*/
+ 	if (bp==NULL || wp==NULL)
+ 		exit(1);
++	wp->w_id = 0;				/* ID of first window is 0 */
+ 	curbp  = bp;				/* Make this current	*/
+ 	wheadp = wp;
+ 	curwp  = wp;
+@@ -757,7 +795,7 @@
+ }
+ #endif /* RESTRICT */
+ 
+-meta()	/* dummy function for binding to meta prefix */
++meta_pfx() /* dummy function for binding to meta prefix */
+ {}
+ 
+ cex()	/* dummy function for binding to control-x prefix */
+@@ -785,12 +823,7 @@
+ 
+ 	if (size <= 0 ||
+ 	    (p = malloc((unsigned)size)) == NULL) return FALSE;
+-#if	BSD
+-	bcopy(src, p, size);
+-#endif
+-#if	USG
+ 	memcpy(p, src, size);
+-#endif
+ 	if (*dst) free(*dst);
+ 	*dst = p;
+ 	return TRUE;
+@@ -818,7 +851,11 @@
+ Char *
+ getclock()
+ {
++#if HAVE_TIME_T
++	time_t t;
++#else
+ 	long t;
++#endif
+ 	struct tm *tmp;
+ 	static Char buf[8];
+ 
+@@ -837,15 +874,17 @@
+ /*
+  * ALRM signal catcher
+  */
++/* ARGSUSED */
+ SIGRET_T
+-clcatcher()
++clcatcher(SIGARG_T(dummy))
+ {
++    (void)signal(SIGALRM, SIG_IGN);
+     if (clflag) {
+ 	int ttcsave = ttcol, ttrsave = ttrow;
+ 
+ 	/* nothing done since last signal. do myself. */
+ 	(void)execute(META|SPEC|'T', FALSE, 1);
+-	doupdate(FALSE);
++	do_update(FALSE);
+ 	movecursor(ttrsave, ttcsave);
+ 	TTflush();
+     }
+@@ -863,3 +902,25 @@
+     (void)alarm((unsigned)cperiod);
+ }
+ #endif /* CLOCK */
++
++#if	USE_LANG
++# if USE_STRNICMP
++#  define strncasecmp strnicmp
++#  define strcasestr stristr
++# endif
++langcode(defaul) int defaul;
++{
++	char *lang = getenv("LANG");
++	if(lang == NULL || strncasecmp(lang, "ja", 2) != 0) return defaul;
++	lang += 2;
++# if HANDLE_UTF
++	if(strcasestr(lang, "utf8") || strcasestr(lang, "utf-8"))
++		return KS_UTF8;
++# endif
++	if(strcasestr(lang, "mscode") || strcasestr(lang, "sjis"))
++		return KS_SJIS;
++	if(strcasestr(lang, ".jis") || strcasestr(lang, "iso"))
++		return KS_JIS;
++	return KS_UJIS;
++}
++#endif	/* USE_LANG */
+diff -ruN kemacs-2.1k.orig/mf.c kemacs-2.1k/mf.c
+--- kemacs-2.1k.orig/mf.c	1993-07-07 09:59:06.000000000 +0900
++++ kemacs-2.1k/mf.c	2012-11-25 20:14:19.000000000 +0900
+@@ -1,40 +1,63 @@
+ #include "econfig.h"
+ 
+ /*** configuration parameters ***/
++CC	      = cc
++/* CC	      = clang -Wno-parentheses -Wno-implicit-function-declaration \
++		-Wno-implicit-int -Wno-return-type /* with LLVM Clang */
+ 
+ /* name, location, owner, group, permission of binary */
++PREFIX	      = /usr/local
+ PROGRAM	      = kemacs
+-DEST	      = /usr/local/bin
++DEST	      = $(PREFIX)/bin
+ OWNER         = root
+ GROUP         = staff
+ MODE	      = 755
+ /* name and location of manual */
+ MNAME	      = kemacs.1
+-MDEST	      = /usr/local/man/man1
++MDEST	      = $(PREFIX)/man/man1
+ /* location of library */
+-LIBDEST	      = /usr/local/lib/kemacs
++LIBDEST	      = $(PREFIX)/lib/kemacs
++
++RCFILE	      = .kemacsrc
+ 
+ /* Flags to CC, LD and INSTALL */
+-OPTIM	      =# -O
+-DEBUG	      = -g
++#ifdef __GNUC__
++OPTIM	      = -O2
++#else
++OPTIM	      = -O
++#endif
++DEBUG	      =# -g
+ DEFS	      =
+-#if BSD
+-#if HAS_AS_R
++#if MALLOC_VOIDSTAR
++GDEFS	      =
++#else
++GDEFS	      = -DMALLOC_CHARSTAR
++#endif
++#if HAVE_AS_R
+ SHARESTR      = -R
+ #endif
+-STRIP	      = -s
++#if HAVE_INSTALL
++STRIPFLG      = -s
+ #endif
+ 
++SED	      = LANG=C sed
++
+ /* File code for sources */
+ FCODE         = -j	/* JIS KANJI */
+ /* FCODE      = -u	/* UJIS KANJI */
+ /* FCODE      = -s	/* SJIS KANJI */
+ 
+ /* location of include file */
++#if HANDLE_UTF
++EINCL	      = -I/usr/local/include	/* for iconv.h */
++/*EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
++#else
++EINCL	      =
++#endif /* EINCL is included in INCL */
+ #if KANJI
+-INCL	      = -Ikanji -ICstrings
++INCL	      = $(EINCL) -Ikanji -ICstrings
+ #else
+-INCL	      =
++INCL	      = $(EINCL)
+ #endif
+ 
+ /* runtime libraries */
+@@ -42,9 +65,21 @@
+ /*ELIBS	      = -lcurses -lPW		# System V */
+ #if BSD
+ ELIBS	      = -ltermlib		/* BSD */
++/*ELIBS	      = -ltermlib -lcompat	# FreeBSD */
+ #endif
+ #if USG_5_4
+ ELIBS         = -lcurses -lgen -lmalloc
++/*ELIBS	      = -lncurses		# Linux */
++#endif
++
++/* iconv library */
++#if HANDLE_UTF
++/*ILIBS	      =					# with glibc (Linux) */
++/*ILIBS	      = -liconv				# Cygwin? */
++ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
++/*ILIBS	      = -liconv -L/usr/local/lib -R/usr/local/lib  # Solaris etc? */
++#else
++ILIBS	      =
+ #endif
+ 
+ /*** end of configuration part ***/
+@@ -53,30 +88,31 @@
+ MAKE	      = exec "make" $(MFLAGS)
+ #endif
+ MAKE_HERE     = $(MAKE) -f make.file
+-MAKE_KANJI    = $(MAKE) -f Makefile.kanji CC='$(CC)' CCFLAGS='$(CCFLAGS)'
+-MAKE_KPP      = $(MAKE) -f Makefile.kpp CC='$(CC)' CCFLAGS='$(CCFLAGS)'
+-MAKE_CSTR     = $(MAKE) -f Makefile.Cstr CC='$(CC)' CCFLAGS='$(CCFLAGS)'
++MAKE_KANJI    = $(MAKE) -f Makefile.kanji CC='$(CC)' CCFLAGS='$(CCFLAGS)' EINCL='$(EINCL)'
++MAKE_KPP      = $(MAKE) -f Makefile.kpp CC='$(CC)' CCFLAGS='$(CCFLAGS)' \
++					EINCL='$(EINCL)' ILIBS='$(ILIBS)'
++MAKE_CSTR     = $(MAKE) -f Makefile.Cstr CC='$(CC)' CCFLAGS='$(CCFLAGS)' EINCL='$(EINCL)'
+ KPP	      = kpp/kpp
+ FTOC	      = kpp/ftoc
+-#if BSD
++#if HAVE_INSTALL
+ INSTALL	      = install
++#else
++STRIP	      = strip
+ #endif
+ MAKETD	      = maketd
+ LINT	      = lint
+ CTAGS	      = ctags
+-#if USG
+-STRIP	      = strip
+-#endif
+ 
+ .SUFFIXES:
+ .SUFFIXES: .o .c .C_ .h .H_
+ 
+-CCFLAGS        = $(OPTIM) $(DEBUG)
++CCFLAGS        = $(OPTIM) $(GDEFS) $(DEBUG)
+ CFLAGS        = $(CCFLAGS) $(INCL) $(DEFS)
+ LDFLAGS	      = $(DEBUG) $(DEFS)
+ LINTFLAGS     = -xhb $(INCL)
+-#if	BSD
+-INSTFLAGS     = -c $(STRIP) -o $(OWNER) -g $(GROUP) -m $(MODE)
++#if HAVE_INSTALL
++INSTFLAGS_NONROOT = -c $(STRIPFLG) -m $(MODE)
++INSTFLAGS     = $(INSTFLAGS_NONROOT) -o $(OWNER) -g $(GROUP)
+ #endif
+ 
+ #if KANJI
+@@ -179,7 +215,8 @@
+ 
+ DOCS	      = Cmds.narrow Commands.me Macros Readme Tech WhatsNew \
+ 		emacs.key emacs.hlp emacs.HLP_ emacs.tut emacs.TUT_ \
+-		emacs.mss emacs.MSS magic.doc Added Install Manifest
++		emacs.mss magic.doc Added Install Manifest .kemacsrc ccg
++/* where's emacs.MSS? omitted by N.Nide */
+ 
+ #if KANJI
+ STROBJ	      = Css.o
+@@ -188,9 +225,9 @@
+ #endif
+ 
+ #if KANJI
+-all:		$(KPP) $(FTOC) $(PROGRAM)
++all:		$(KPP) $(FTOC) $(PROGRAM) $(RCFILE)
+ #else
+-all:		$(PROGRAM)
++all:		$(PROGRAM) $(RCFILE)
+ #endif
+ 
+ debug:;       @ $(MAKE_HERE) all PROGRAM="a.out" \
+@@ -198,13 +235,8 @@
+ 			DEBUG="-g"
+ 
+ $(PROGRAM):     $(OBJS) $(LIBS) $(STROBJ)
+-#if BSD
+-	      @ echo -n "Loading $(PROGRAM) ..."
+-#endif
+-#if USG
+-	      @ echo "Loading $(PROGRAM) ...\c"
+-#endif
+-	      @ $(CC) $(LDFLAGS) $(STROBJ) $(OBJS) $(LIBS) $(ELIBS) -o $(PROGRAM)
++	      @ echo "Loading $(PROGRAM) ..."
++	      $(CC) $(LDFLAGS) $(STROBJ) $(OBJS) $(LIBS) $(ELIBS) $(ILIBS) -o $(PROGRAM)
+ 	      @ echo "done"
+ 
+ clean:
+@@ -212,55 +244,59 @@
+ 	      @ cd kpp; $(MAKE_KPP) clean
+ 	      @ cd kanji; $(MAKE_KANJI) clean
+ 	      @ cd Cstrings; $(MAKE_CSTR) clean
+-	      @ rm -f $(OBJS) $(CSRCS) $(HHDRS) Cxx.* Css.* a.out Cstr.data make.file *.bak core
++	      @ rm -f $(OBJS) $(CSRCS) $(HHDRS) Cxx.* Css.* a.out Cstr.data make.file *.bak core $(RCFILE)
+ 
+ realclean:
+ 	      @ echo "Cleaning all binaries and executables ..."
+ 	      @ cd kpp; $(MAKE_KPP) realclean
+ 	      @ cd kanji; $(MAKE_KANJI) realclean
+ 	      @ cd Cstrings; $(MAKE_CSTR) realclean
+-	      @ rm -f $(PROGRAM) $(OBJS) $(CSRCS) $(HHDRS) Cxx.* Css.* a.out Cstr.data make.file *.bak core
++	      @ rm -f $(PROGRAM) $(OBJS) $(CSRCS) $(HHDRS) Cxx.* Css.* a.out Cstr.data make.file *.bak core $(RCFILE)
+ 
+ install:	inst-bin inst-man inst-lib
+ 
+ inst-bin:	$(PROGRAM)
+-#if BSD
+-	      @ echo -n Installing $(PROGRAM) in $(DEST) "..."
+-#endif
+-#if USG
+-	      @ echo Installing $(PROGRAM) in $(DEST) "...\c"
+-#endif
+-#if BSD
+-	      @ $(INSTALL) $(INSTFLAGS) $(PROGRAM) $(DEST)
+-#endif
+-#if USG
+-	      @ cp $(PROGRAM) $(DEST) && \
+-		cd $(DEST) && \
+-		$(STRIP) $(PROGRAM) && \
+-		chmod $(MODE) $(PROGRAM) && \
+-		chown $(OWNER) $(PROGRAM) && \
+-		chgrp $(GROUP) $(PROGRAM)
++	      @ echo Installing $(PROGRAM) in $(DEST) "..."
++	      -mkdir $(DEST) 2>/dev/null || mkdir -p $(DEST)
++	       /* if mkdir doesn't have -p option, possibly both fails */
++#if HAVE_INSTALL
++	      case "`id`" in \
++	      uid=0*|"") $(INSTALL) $(INSTFLAGS) $(PROGRAM) $(DEST);; \
++	      *)         $(INSTALL) $(INSTFLAGS_NONROOT) $(PROGRAM) $(DEST);; \
++	      esac
++#else
++	      cp $(PROGRAM) $(DEST) && \
++		$(STRIP) $(DEST)/$(PROGRAM) && \
++		chmod $(MODE) $(DEST)/$(PROGRAM)
++	      case "`id`" in \
++	      uid=0*|'') \
++		chown $(OWNER) $(DEST)/$(PROGRAM) && \
++		chgrp $(GROUP) $(DEST)/$(PROGRAM);; \
++	      esac
+ #endif
+ 	      @ echo " done"
+ 
+ inst-man:
+ 	      @ echo -n "Installing manual ..."
+-	      @ if [ `pwd`/$(MANUAL) != $(MDEST)/$(MNAME) ]; then \
++	      -mkdir $(MDEST) 2>/dev/null || mkdir -p $(MDEST)
++	      if [ `pwd`/$(MANUAL) != $(MDEST)/$(MNAME) ]; then \
+ 			cp $(MANUAL) $(MDEST)/$(MNAME); \
+-			fi
++		fi
+ 	      @ echo " done"
+ 
+ inst-lib:
+ 	      @ echo -n "Installing library ..."
+-	      @ if [ `pwd` != $(LIBDEST) ]; then \
++	      -mkdir $(LIBDEST) 2>/dev/null || mkdir -p $(LIBDEST)
++	      if [ `pwd` != $(LIBDEST) ]; then \
+ 			cp $(DOCS) $(LIBDEST); \
++			chmod a+x $(LIBDEST)/ccg; \
+ 		fi
+ 	      @ echo " done"
+ 
+ update:		$(DEST)/$(PROGRAM)
+ 
+ $(DEST)/$(PROGRAM): $(PROGRAM)
+-	      @ $(MAKE_HERE) install
++	      $(MAKE_HERE) install
+ 
+ lint:		$(CSRCS) $(HHDRS)
+ 	      @ "$(LINT)" $(LINTFLAGS) $(CSRCS) 2>&1 | egrep -v 'possible pointer alignment'
+@@ -278,18 +314,18 @@
+ FORCE:
+ 
+ kanji/kanji.a:	FORCE
+-	      @ cd kanji; $(MAKE_KANJI) all
++	      cd kanji; $(MAKE_KANJI) all
+ 
+ Cstrings/Cstrings.a:	FORCE
+-	      @ cd Cstrings; $(MAKE_CSTR) all
++	      cd Cstrings; $(MAKE_CSTR) all
+ 
+ Css.o:		Css.c
+ 		$(CC) -c $(SHARESTR) $*.c
+ 
+ #if KANJI
+ .C_.c:;	      @ echo processing $*.C_ ...
+-	      @ $(KPP) $(FCODE) $*.C_
+-	      @ mv Cxx.c $@
++	      $(KPP) $(FCODE) $*.C_
++	      mv Cxx.c $@
+ #else
+ .C_.c:;	      @ cp $*.C_ $@
+ #endif
+@@ -297,10 +333,17 @@
+ .c.o:;		$(CC) $(CFLAGS) -c $*.c
+ 
+ #if KANJI
++epath.h:	epath.H_
++	      $(SED) -e 's|_PREFIX_|$(PREFIX)|g' $*.H_ | $(KPP) $(FCODE) 
++	      mv Cxx.c $@
++
+ .H_.h:;	      @ echo processing $*.H_ ...
+-	      @ $(KPP) $(FCODE) $*.H_
+-	      @ mv Cxx.c $@
++	      $(KPP) $(FCODE) $*.H_
++	      mv Cxx.c $@
+ #else
++epath.h:	epath.H_
++		$(SED) -e 's|_PREFIX_|$(PREFIX)|g' $*.H_ > $@
++
+ .H_.h:;	      @ cp $*.H_ $@
+ #endif
+ 
+@@ -309,7 +352,7 @@
+ 	      @ $(FTOC)
+ 
+ $(KPP) $(FTOC):	$(LIBS) FORCE
+-	      @ cd kpp; $(MAKE_KPP) all
++	      cd kpp; $(MAKE_KPP) all
+ 
+ co:		$(HDRS) $(SRCS) $(MANUAL) $(DOCS)
+ 
+@@ -351,3 +394,6 @@
+ version.c: version.C_
+ window.c: window.C_
+ word.c: word.C_
++
++$(RCFILE):	$(RCFILE).tmpl
++		$(SED) -e 's|_PREFIX_|$(PREFIX)|g' $(RCFILE).tmpl > $@
+diff -ruN kemacs-2.1k.orig/random.C_ kemacs-2.1k/random.C_
+--- kemacs-2.1k.orig/random.C_	1990-09-21 21:52:42.000000000 +0900
++++ kemacs-2.1k/random.C_	2012-11-25 00:50:58.000000000 +0900
+@@ -732,7 +732,7 @@
+ }
+ 
+ /*ARGSUSED*/
+-setmode(f, n)	/* prompt and set an editor mode */
++set_mode(f, n)	/* prompt and set an editor mode */
+ {
+ 	(void)adjustmode(TRUE, FALSE);
+ 	return(TRUE);
+@@ -805,7 +805,7 @@
+ 
+ 	/* make it uppercase */
+ #if	COLOR
+-	uflag = isupper(*cbuf);
++	uflag = isUpper(*cbuf);
+ #endif
+ 	(void)mkupper(cbuf);
+ 
+@@ -869,7 +869,7 @@
+ 
+ 	mlwrite(
+ #if KMSGS
+-	    kterminal? CSTR("$B$=$s$J%b!<%I$O$"$j$^$;$s!*(J"):
++	    kterminal? CSTR("$B$=$s$J%b!<%I$O$"$j$^$;$s(J!"):
+ #endif
+ 	    CSTR("No such mode!"));
+ 	return(FALSE);
+@@ -1111,10 +1111,9 @@
+ {
+ 	register int status;	/* status return code */
+ 	Char dir[NFILEN+1];	/* name of directory */
+-#if BSD
++#if !USE_GETCWD
+ 	char *getwd();
+-#endif
+-#if USG
++#else
+ 	char *getcwd();
+ #endif
+ 	register Char *p;
+@@ -1153,11 +1152,10 @@
+ 		return(FALSE);
+ 	}
+ 	mlwrite(CSTR("%s"),
+-#if BSD
++#if !USE_GETCWD
+ 		p=SafeCfromc(getwd((char *)dir)));
+-#endif
+-#if USG
+-		p=SafeCfromc(getcwd((char *)dir, NFILEN*sizeof(Char))));
++#else
++		p=SafeCfromc(getcwd((char *)dir, NFILEN)));
+ #endif
+ 	Free(p);
+ 	return(TRUE);
+@@ -1172,6 +1170,9 @@
+ 	Char fpat[NPAT];		/* pattern */
+ 	Char cbuf[NPAT];		/* buffer to recieve mode name into */
+ 	char *p, *q;
++#if HAVE_REGEX
++	regex_t preg;
++#endif
+ 
+ 	/* prompt the user and get an answer */
+ 	(void)mlreply(
+@@ -1196,7 +1197,7 @@
+ 	if (mode < 0) {
+ 		mlwrite(
+ #if KMSGS
+-		    kterminal? CSTR("$B$=$s$J%b!<%I$O$"$j$^$;$s!*(J"):
++		    kterminal? CSTR("$B$=$s$J%b!<%I$O$"$j$^$;$s(J!"):
+ #endif
+ 		    CSTR("No such mode!"));
+ 		return(FALSE);
+@@ -1218,11 +1219,15 @@
+ 	}
+ 	p = cfromC(fpat);
+ 	if (
+-#if	BSD
++#if HAVE_REGEX
++	    regcomp(&preg, p, REG_NOSUB) != 0
++#else
++# if	BSD
+ 	    re_comp(p) != NULL
+-#endif
+-#if	USG
++# endif
++# if	USG
+ 	    regcmp(p, (char *)0) == NULL
++# endif
+ #endif
+ 				) {
+ 		mlwrite(
+@@ -1232,6 +1237,9 @@
+ 			CSTR("Invalid pattern"));
+ 		return(FALSE);
+ 	}
++#if HAVE_REGEX
++	else regfree(&preg);
++#endif
+ 	if (npatent >= NMPAT) {
+ 		mlwrite(
+ #if KMSGS
+diff -ruN kemacs-2.1k.orig/region.C_ kemacs-2.1k/region.C_
+--- kemacs-2.1k.orig/region.C_	1990-09-21 21:52:44.000000000 +0900
++++ kemacs-2.1k/region.C_	2012-11-25 00:49:33.000000000 +0900
+@@ -99,7 +99,7 @@
+ 			loffs = 0;
+ 		} else {
+ 			c = lgetc(linep, loffs);
+-			if (isupper(c))
++			if (isUpper(c))
+ 				lputc(linep, loffs, CHCASE(c));
+ 			++loffs;
+ 		}
+@@ -137,7 +137,7 @@
+ 			loffs = 0;
+ 		} else {
+ 			c = lgetc(linep, loffs);
+-			if (islower(c))
++			if (isLower(c))
+ 				lputc(linep, loffs, CHCASE(c));
+ 			++loffs;
+ 		}
+diff -ruN kemacs-2.1k.orig/search.C_ kemacs-2.1k/search.C_
+--- kemacs-2.1k.orig/search.C_	1990-09-21 21:52:46.000000000 +0900
++++ kemacs-2.1k/search.C_	2012-11-25 00:49:47.000000000 +0900
+@@ -46,6 +46,11 @@
+ #include	"estruct.h"
+ #include	"edef.h"
+ 
++static int amatch(), readpattern(), replaces(), nextch(), mcstr(), mceq(),
++	   cclmake(), biteq(), setbit();
++static Char adjcase();
++static BITMAP clearbits();
++
+ /*
+  * forwsearch -- Search forward.  Get a search string from the user, and
+  *	search for the string.  If found, reset the "." to be just after
+@@ -91,7 +96,7 @@
+ 		else
+ 		  mlwrite(
+ #if KMSGS
+-			  kterminal? CSTR("$B8+IU$+$j$^$;$s(J"):
++			  kterminal? CSTR("$B8+$D$+$j$^$;$s(J"):
+ #endif
+ 			  CSTR("Not found"));
+ 	}
+@@ -563,8 +568,6 @@
+ 	register Char	bc;
+ 	register Char	pc;
+ {
+-	Char adjcase();
+-
+ 	if (!(curwp->w_bufp->b_mode & MDEXACT)) {
+ 		bc = adjcase(bc);
+ 		pc = adjcase(pc);
+@@ -625,7 +628,7 @@
+ 	{ 0x236d, 'M' }, { 0x236e, 'N' }, { 0x236f, 'O' }, { 0x2370, 'P' },
+ 	{ 0x2371, 'Q' }, { 0x2372, 'R' }, { 0x2373, 'S' }, { 0x2374, 'T' },
+ 	{ 0x2375, 'U' }, { 0x2376, 'V' }, { 0x2377, 'W' }, { 0x2378, 'X' },
+-	{ 0x2379, 'Y' },
++	{ 0x2379, 'Y' }, { 0x237a, 'Z' },
+ 	/* HIRAGANA */
+ 	{ 0x2421, 0xa7 }, { 0x2422, 0xb1 }, { 0x2423, 0xa8 }, { 0x2424, 0xb2 },
+ 	{ 0x2425, 0xa9 }, { 0x2426, 0xb3 }, { 0x2427, 0xaa }, { 0x2428, 0xb4 },
+@@ -687,7 +690,7 @@
+ 	register int r, l, m;
+ 	register Char x;
+ 
+-	if (islower(c))
++	if (isLower(c))
+ 		return CHCASE(c);
+ #if KANJI
+ 	for (l = 0, r = CTABSIZE-1; l <= r; ) {
+@@ -859,11 +862,11 @@
+ 	if ((status = readpattern(
+ 			(kind == FALSE ? (
+ #if KMSGS
+-				kterminal? CSTR("$BCV49!JC5:wJ8;zNs!K(J"):
++				kterminal? CSTR("$BCV49(J ($BC5:wJ8;zNs(J) "):
+ #endif
+ 				CSTR("Replace")): (
+ #if KMSGS
+-				kterminal? CSTR("$BC`<!CV49!JC5:wJ8;zNs!K(J"):
++				kterminal? CSTR("$BC`<!CV49(J ($BC5:wJ8;zNs(J) "):
+ #endif
+ 				CSTR("Query replace"))),
+ 			pat, TRUE))
+@@ -874,7 +877,7 @@
+ 	 */
+ 	if ((status = readpattern(
+ #if KMSGS
+-			kterminal? CSTR("$B!JCV49J8;zNs!K(J"):
++			kterminal? CSTR(" ($BCV49J8;zNs(J) "):
+ #endif
+ 			CSTR("with"),
+ 				  rpat, FALSE)) == ABORT)
+@@ -907,7 +910,7 @@
+ 		(void)expandp(rpat, &tpat[Cstrlen(tpat)], NPAT/3);
+ 		(void)Cstrcat(tpat,
+ #if KMSGS
+-			kterminal? CSTR("' $B$HCV$-49$($^$9$+!)(J "):
++			kterminal? CSTR("' $B$HCV$-49$($^$9$+(J? "):
+ #endif
+ 			CSTR("'? "));
+ 
+@@ -1012,7 +1015,7 @@
+ 			case BELL:	/* abort! and stay */
+ 				mlwrite(
+ #if KMSGS
+-					kterminal? CSTR("$BCf;_$5$l$^$7$?!*(J"):
++					kterminal? CSTR("$BCf;_$5$l$^$7$?(J!"):
+ #endif
+ 					CSTR("Aborted!"));
+ 				return(FALSE);
+@@ -1367,7 +1370,7 @@
+ 	case CCL:
+ 		if (!(result = biteq(bc, mt->u.cclmap))) {
+ 			if (!(curwp->w_bufp->b_mode & MDEXACT) &&
+-			    (isletter(bc))) {
++			    (isAlpha(bc))) {
+ 				result = biteq(CHCASE(bc), mt->u.cclmap);
+ 			}
+ 		}
+@@ -1377,7 +1380,7 @@
+ 		result = !biteq(bc, mt->u.cclmap);
+ 
+ 		if (!(curwp->w_bufp->b_mode & MDEXACT) &&
+-		    (isletter(bc))) {
++		    (isAlpha(bc))) {
+ 			result &= !biteq(CHCASE(bc), mt->u.cclmap);
+ 		}
+ 		break;
+@@ -1402,7 +1405,6 @@
+ 	Char	**ppatptr;
+ 	MC	*mcptr;
+ {
+-	BITMAP		clearbits();
+ 	BITMAP		bmap;
+ 	register Char	*patptr;
+ 	register int	pchr, ochr;
+@@ -1507,8 +1509,6 @@
+ static BITMAP
+ clearbits()
+ {
+-	char		*malloc();
+-
+ 	BITMAP		cclstart, cclmap;
+ 	register int	j;
+ 
+diff -ruN kemacs-2.1k.orig/spawn.C_ kemacs-2.1k/spawn.C_
+--- kemacs-2.1k.orig/spawn.C_	1993-07-07 10:08:10.000000000 +0900
++++ kemacs-2.1k/spawn.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -8,7 +8,10 @@
+ #include	"edef.h"
+ 
+ #include	<signal.h>
++#include	<pwd.h>
++#include	<errno.h>
+ extern int vttidy();
++static int System();
+ 
+ /*
+  * Create a subjob with a copy of the command intrepreter in it. When the
+@@ -30,36 +33,59 @@
+ 
+ 	movecursor(term.t_nrow, 0);		/* Seek to last line.	*/
+ 	TTflush();
+-	if ((cp = getenv("SHELL")) != NULL && *cp != '\0')
+-		(void)System(cp);
+-	else
+-#if	BSD
+-		(void)System("exec /bin/csh");
+-#endif
+-#if	USG
+-		(void)System("exec /bin/sh");
+-#endif
++
++	if((cp = getenv("SHELL")) == NULL || !*cp){
++		struct passwd *ent = getpwuid(geteuid());
++
++		cp = (ent == NULL ? "/bin/sh" : ent->pw_shell);
++	}
++	(void)System(cp, FALSE, NULL, NULL);
++
+ 	sgarbf = TRUE;
+-	sleep(2);
++	millisleep(TRUE, 1000);
++	 /* originally sleep(2), but maybe 1sec is enough (Nide) */
+ 	return(TRUE);
+ }
+ 
+-#if	BSD
+-
++#ifdef SIGTSTP
+ bktoshell()		/* suspend MicroEMACS and wait to wake up */
+ {
++	movecursor(term.t_nrow, 0);		/* Seek to last line.	*/
++	TTflush();
++
+ 	vttidy();
+ 	(void)kill(0, SIGTSTP); /* suspend all processes within a group */
+ 	TTkopen();
+ }
+ 
+-rtfrmshell()
++/* ARGSUSED */
++SIGRET_T
++rtfrmshell(SIGARG_T(dummy))
+ {
+ 	ttopen();
+ 	curwp->w_flag = WFHARD;
+ 	sgarbf = TRUE;
++	(void)signal(SIGCONT, rtfrmshell);
++}
++#endif
++
++static mktmpdir(s)
++    char *s; /* like "/tmp/kmXXXXXX" */
++{
++	char	*p;
++	long	l, lbase;
++	static	int i = 0;
++
++	p = s + strlen(s) - 6;
++	l = getpid() + (getpid() << 15) + time(NULL) + i++;
++	lbase = (l &= 0xffffffL);
++	do {
++		sprintf(p, "%06lX", l);
++		if(mkdir(s, 0700) == 0) return 0;
++		if(errno != EEXIST) return -1;
++	} while(l++, l &= 0xffffffL, l != lbase);
++	return -1;
+ }
+-#endif /*BSD*/
+ 
+ /*
+  * Run a one-liner in a subjob. When the command returns, wait for a single
+@@ -83,7 +109,7 @@
+ 		return (s);
+ 	TTputc('\n');                /* Already have '\r'    */
+ 	TTflush();
+-	(void)System(cfromC(line));
++	(void)System(cfromC(line), TRUE, NULL, NULL);
+ 	mlputs(
+ #if KMSGS
+ 	    kterminal? CSTR("[$B=*N;(J]"):
+@@ -109,7 +135,13 @@
+ 	register BUFFER *bp;	/* pointer to buffer to zot */
+ 	Char	line[NLINE];	/* command line send to shell */
+ 	static Char *bname = CSTR("[command]");
+-	static Char *filnam = CSTR(",command");
++	bool	retval;
++
++	static char tmpdirtmpl[] = "/tmp/.kmXXXXXX";
++	static char tmpfilbas[] = ",command";
++	char tmpdirname[sizeof(tmpdirtmpl)];
++	char tmpfilnam[sizeof(tmpdirtmpl) + sizeof(tmpfilbas)];
++	Char *filnam;
+ 
+ #if	RESTRICT
+ 	/* don't allow this command if restricted */
+@@ -118,8 +150,7 @@
+ #endif
+ 
+ 	/* get the command to pipe in */
+-	if ((s=mlreply(CSTR("@"),
+-				  line, NLINE)) != TRUE)
++	if ((s=mlreply(CSTR("@"), line, NLINE)) != TRUE)
+ 		return(s);
+ 
+ 	/* get rid of the command output buffer if it exists */
+@@ -137,34 +168,47 @@
+ 			return(FALSE);
+ 	}
+ 
++	/* make temporal dir */
++	strcpy(tmpdirname, tmpdirtmpl);
++	if(mktmpdir(tmpdirname) < 0) return(FALSE);
++	chmod(tmpdirname, 0700); /* in case umask is like 0266... :-) */
++	sprintf(tmpfilnam, "%s/%s", tmpdirname, tmpfilbas);
++	filnam = SafeCfromc(tmpfilnam);
++
+ 	TTflush();
+-	(void)Cstrcat(line,CSTR(">"));
+-	(void)Cstrcat(line,filnam);
+-	(void)System(cfromC(line));
++	(void)System(cfromC(line), TRUE, NULL, tmpfilnam);
+ 	TTflush();
+ 	sgarbf = TRUE;
+-	s = TRUE;
+ 
+-	if (s != TRUE)
+-		return(s);
++	/* s = TRUE;
++	   if (s != TRUE)
++		return(s); */
+ 
+ 	/* split the current window to make room for the command output */
+-	if (splitwind(FALSE, 1) == FALSE)
+-			return(FALSE);
++	if (splitwind(FALSE, 1) == FALSE){
++		retval = FALSE;
++		goto return_gracefully;
++	}
+ 
+ 	/* and read the stuff in */
+-	if (getfile(filnam, FALSE) == FALSE)
+-		return(FALSE);
++	if (getfile(filnam, FALSE) == FALSE){
++		retval = FALSE;
++		goto return_gracefully; 
++	}
+ 
+ 	/* set name and make this window in VIEW mode, update all mode lines */
+ 	(void)copystr(&curwp->w_bufp->b_bname, bname);
+ 	(void)copystr(&curwp->w_bufp->b_fname, CSTR(""));
+ 	curwp->w_bufp->b_mode |= MDVIEW;
+ 	upmode();
++	retval = TRUE;
+ 
+ 	/* and get rid of the temporary file */
+-	(void)unlink(cfromC(filnam));
+-	return(TRUE);
++    return_gracefully:
++	Free(filnam);
++	(void)unlink(tmpfilnam);
++	rmdir(tmpdirname);
++	return(retval);
+ }
+ 
+ /*
+@@ -178,8 +222,15 @@
+ 	register BUFFER *bp;	/* pointer to buffer to zot */
+ 	Char line[NLINE];	/* command line send to shell */
+ 	Char *tmpnam;		/* place to store real file name */
+-	static Char *filnam1 = CSTR(",fltinp");
+-	static Char *filnam2 = CSTR(",fltout");
++	bool retval;
++
++	static char tmpdirtmpl[] = "/tmp/.kmXXXXXX";
++	static char tmpfilbas1[] = ",fltinp";
++	static char tmpfilbas2[] = ",fltout";
++	char tmpdirname[sizeof(tmpdirtmpl)];
++	char tmpfilnam1[sizeof(tmpdirtmpl) + sizeof(tmpfilbas1)];
++	char tmpfilnam2[sizeof(tmpdirtmpl) + sizeof(tmpfilbas2)];
++	Char *filnam1, *filnam2;
+ 
+ #if	RESTRICT
+ 	/* don't allow this command if restricted */
+@@ -191,10 +242,18 @@
+ 		return(rdonly());	/* we are in read only mode	*/
+ 
+ 	/* get the filter name and its args */
+-	if ((s=mlreply(CSTR("#"),
+-				  line, NLINE)) != TRUE)
++	if ((s=mlreply(CSTR("#"), line, NLINE)) != TRUE)
+ 		return(s);
+ 
++	/* make temporal dir */
++	strcpy(tmpdirname, tmpdirtmpl);
++	if(mktmpdir(tmpdirname) < 0) return(FALSE);
++	chmod(tmpdirname, 0700); /* in case umask is like 0266... :-) */
++	sprintf(tmpfilnam1, "%s/%s", tmpdirname, tmpfilbas1);
++	sprintf(tmpfilnam2, "%s/%s", tmpdirname, tmpfilbas2);
++	filnam1 = SafeCfromc(tmpfilnam1);
++	filnam2 = SafeCfromc(tmpfilnam2);
++
+ 	/* setup the proper file names */
+ 	bp = curbp;
+ 	tmpnam = bp->b_fname;	/* save the original name */
+@@ -204,20 +263,15 @@
+ 	if (writeout(filnam1) != TRUE) {
+ 		mlwrite(
+ #if KMSGS
+-		    kterminal? CSTR("[$B%U%#%k%?MQ%U%!%$%k$K=q9~$a$^$;$s(J]"):
++		    kterminal? CSTR("[$B%U%#%k%?MQ%U%!%$%k$K=q$-9~$a$^$;$s(J]"):
+ #endif
+ 		    CSTR("[Cannot write filter file]"));
+-		free((char *)bp->b_fname);
+-		bp->b_fname = tmpnam;
+-		return(FALSE);
++		retval = FALSE;
++		goto return_gracefully;
+ 	}
+ 
+ 	TTflush();
+-	(void)Cstrcat(line, CSTR(" <"));
+-	(void)Cstrcat(line, filnam1);
+-	(void)Cstrcat(line, CSTR(" >"));
+-	(void)Cstrcat(line, filnam2);
+-	(void)System(cfromC(line));
++	(void)System(cfromC(line), TRUE, tmpfilnam1, tmpfilnam2);
+ 	TTflush();
+ 	sgarbf = TRUE;
+ 
+@@ -228,30 +282,35 @@
+ 		    kterminal? CSTR("[$B<B9T7k2L$rFI$_9~$a$^$;$s(J]"):
+ #endif
+ 		    CSTR("[Can't read the result]"));
+-		free((char *)bp->b_fname);
+-		bp->b_fname = tmpnam;
+-		(void)unlink(cfromC(filnam1));
+-		(void)unlink(cfromC(filnam2));
+-		return(s);
++		retval = FALSE; /* not s, I think. Nide */ 
++		goto return_gracefully;
+ 	}
+ 
++	retval = TRUE;
++	bp->b_flag |= BFCHG;		/* flag it as changed */
++
++  return_gracefully:
+ 	/* reset file name */
+ 	free((char *)bp->b_fname);
+ 	bp->b_fname =  tmpnam;	/* restore name */
+-	bp->b_flag |= BFCHG;		/* flag it as changed */
+ 
+ 	/* and get rid of the temporary file */
+-	(void)unlink(cfromC(filnam1));
+-	(void)unlink(cfromC(filnam2));
+-	return(TRUE);
++	Free(filnam1);
++	Free(filnam2);
++	(void)unlink(tmpfilnam1);
++	(void)unlink(tmpfilnam2);
++	rmdir(tmpdirname);
++	return(retval);
+ }
+ 
+ /*
+  * execute shell command.
+  */
+-int
+-System(cmd)
++static int
++System(cmd, via_shell_p, inf, outf)
+     char *cmd;
++    bool via_shell_p;
++    char *inf, *outf;
+ {
+     int s;
+ #if	CLOCK
+@@ -260,11 +319,46 @@
+ #endif
+ 
+ #if	CLOCK
+-    f = signal(SIGALRM, SIG_DFL);
++    f = signal(SIGALRM, SIG_IGN);
+     t = alarm((unsigned)0);
+ #endif
+     TTclose();
+-    s = system(cmd);
++
++    switch(fork()){
++    case -1:
++	s = -1;
++	break;
++    case 0:
++	if(inf != NULL){
++	    if(freopen(inf, "r", stdin) == NULL) exit(-1);
++	}
++	if(outf != NULL){
++	    if(freopen(outf, "w", stdout) == NULL) exit(-1);
++	}
++	
++	if(via_shell_p){
++	    execlp("/bin/sh", "/bin/sh", "-c", cmd, NULL);
++	} else {
++	    execlp(cmd, cmd, NULL);
++	}
++	exit(-1);
++    default:
++	for(;;){
++	    int child_stat;
++
++	    if(0 >= wait(&child_stat)){s = -1; break;}
++	    switch(child_stat & 0xff){
++	    case 0: /* exitted */
++		s = (child_stat >> 8) & 0xff; break;
++	    case 0x7f: /* stopped */
++		continue;
++	    default: /* terminated by signal */
++		s = -1; break;
++	    }
++	    break;
++	}
++    }
++
+     ttopen();
+ #if	CLOCK
+     (void)signal(SIGALRM, f);
+diff -ruN kemacs-2.1k.orig/tcap.C_ kemacs-2.1k/tcap.C_
+--- kemacs-2.1k.orig/tcap.C_	1990-09-21 21:52:49.000000000 +0900
++++ kemacs-2.1k/tcap.C_	2012-11-25 12:27:59.000000000 +0900
+@@ -54,10 +54,10 @@
+     {NULL, NULL}};
+ 
+ TERM term = {
+-	NULL,	/* these four values are set dynamically at open time */
+-	NULL,
+-	NULL,
+-	NULL,
++	0,	/* these four values are set dynamically at open time */
++	0,
++	0,
++	0,
+ 	MARGIN,
+ 	SCRSIZ,
+ 	NPAUSE,
+@@ -129,7 +129,7 @@
+ #if KANJI
+ # if defined(DEF_T_CODE)
+ 	KS_INTERP(term.t_code) = KS_KANJI;
+-	KS_CODE(term.t_code) = DEF_T_CODE;
++	KS_CODE(term.t_code) = langcode(DEF_T_CODE);
+ 	KS_THRU(term.t_code) = DEF_T_THRU;
+ #  if defined(DEF_T_KI) && defined(DEF_T_RI)
+ 	KS_KI(term.t_code) = DEF_T_KI;
+@@ -144,6 +144,8 @@
+ 	kterminal = FALSE;
+ #  endif
+ # endif /* !DEF_T_CODE */
++	KS_EOLINT(term.t_code) = KS_EOLKNOWN; /* EOL type is fixed on KS_LF */
++	KS_EOL(term.t_code) = KS_LF; /* fixed on KS_LF */
+ # if defined(KANJI_TERMCAP)
+ 	/* get terminal's KANJI spec from TERMCAP */
+ 	if ((kj = tgetstr(KANJI_TERMCAP, &p)) != NULL) {
+@@ -186,6 +188,7 @@
+ 	    KS_CODE(term.t_code) = KS_SJIS;
+ 	    KS_THRU(term.t_code) = 1;
+ 	    break;
++	  /* UTF8 not yet supported */
+ 	  }
+ 	} else if (tgetflag(KANJI_TERMCAP)) {
+ #  if KMSGS
+@@ -279,7 +282,8 @@
+ putnpad(str, n)
+ 	char	*str;
+ {
+-	tputs(str, n, ttputc);
++	if(str != NULL)
++		tputs(str, n, ttputc);
+ }
+ 
+ #if	FLABEL
+@@ -291,34 +295,88 @@
+ }
+ #endif /*FLABEL*/
+ 
+-#if BSD_4_2W
+-# undef	CTRL
++#include <signal.h>
++#if HAVE_TERMIOS
++# include <termios.h>
++#else
++# if USG
++#  include <termio.h>
++# endif
++#endif
++#ifdef SIGWINCH
+ # include <sys/ioctl.h>
+ #endif
+ 
+ /* Get terminal size */
++ /* modified by N.Nide; use LINES and COLUMNS if we have them (for uum) */
+ get_screen_size(rowp, colp)
+ int *rowp, *colp;
+ {
+-	int row, col;
++	int row, col, i;
++	char	*p;
++
++#ifdef TIOCGWINSZ
++ /* try TIOCGWINSZ first, since some systems have #define TIOCGSIZE TIOCGWINSZ
++    but don't have struct winsize. */
++	struct winsize wsz;
++
++	if(ioctl(fileno(stdout), TIOCGWINSZ, &wsz) == -1)
++		wsz.ws_row = wsz.ws_col = 0;
++#else
+ #ifdef TIOCGSIZE
+ 	struct ttysize tty;
+ 
+-	if ((ioctl(fileno(stdout), TIOCGSIZE, &tty) != -1) &&
+-	    ((row = tty.ts_lines-1) != -1) &&
+-	    ((col = tty.ts_cols) != 0)) {
+-		goto got_it;
+-	}
++	if (ioctl(fileno(stdout), TIOCGSIZE, &tty) == -1)
++		tty.ts_lines = tty.ts_cols = 0;
++#endif
++#endif
++
++#if USE_ENVSZ
++	if(NULL != (p = getenv("LINES"))){
++		row = atoi(p) - 1;
++	} else
++#endif
++#ifdef TIOCGWINSZ
++	if(wsz.ws_row){
++		row = wsz.ws_row - 1;
++	} else
++#else
++#ifdef TIOCGSIZE
++	if(tty.ts_lines){
++		row = tty.ts_lines - 1;
++	} else
+ #endif
+-	if ((row = tgetnum("li")-1) == -2) {
++#endif
++	if((i = tgetnum("li")) != -1){
++		row = i - 1;
++	} else {
+ 		puts("termcap entry incomplete (lines)");
+ 		exit(1);
+ 	}
+-	if ((col = tgetnum("co")) == -1) {
++
++#if USE_ENVSZ
++	if(NULL != (p = getenv("COLUMNS"))){
++		col = atoi(p);
++	} else
++#endif
++#ifdef TIOCGWINSZ
++	if(wsz.ws_col){
++		col = wsz.ws_col;
++	} else
++#else
++#ifdef TIOCGSIZE
++	if(tty.ts_cols){
++		col = tty.ts_cols;
++	} else
++#endif
++#endif
++	if((i = tgetnum("co")) != -1){
++		col = i;
++	} else {
+ 		puts("Termcap entry incomplete (columns)");
+ 		exit(1);
+ 	}
+-got_it:
++
+ 	if (row > MAX_SCREEN_LINES) {
+ 		puts("Number of lines on screen is larger than configration.");
+ 		exit(1);
+diff -ruN kemacs-2.1k.orig/termio.C_ kemacs-2.1k/termio.C_
+--- kemacs-2.1k.orig/termio.C_	1993-07-07 10:08:11.000000000 +0900
++++ kemacs-2.1k/termio.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -9,49 +9,100 @@
+ 
+ static Char *dummy = CSTR("");
+ 
+-#if	USG			/* System V */
+-# include	<signal.h>
+-# include	<termio.h>
++#include <signal.h>
++#if HAVE_TERMIOS
++# include <termios.h>
++struct	termios	otermio;	/* original terminal characteristics */
++struct	termios	ntermio;	/* charactoristics to use inside */
++#else
++# if	USG			/* System V */
++#  include	<termio.h>
++#  ifndef TCGETS /* uses TCGETA */
+ struct	termio	otermio;	/* original terminal characteristics */
+ struct	termio	ntermio;	/* charactoristics to use inside */
+-#endif
++#  else
++ /* should I include <termios.h> here? */
++struct	termios	otermio;
++struct	termios	ntermio;
++#  endif
++# endif /* USG */
+ 
+-#if	BSD
+-# undef	CTRL
+-# include	<sgtty.h>	 /* for stty/gtty functions */
+-# include	<signal.h>
++# if	BSD
++#  include	<sgtty.h>	 /* for stty/gtty functions */
+ struct	sgttyb	ostate;		 /* saved tty state */
+ struct	sgttyb	nstate;		 /* values for editor mode */
+ struct tchars	otchars;	/* Saved terminal special character set */
+-struct tchars	ntchars = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++struct tchars	ntchars = { (char)0xff, (char)0xff, (char)0xff,
++			    (char)0xff, (char)0xff, (char)0xff };
+ 				/* A lot of nothing */
+-# include <sys/ioctl.h>		/* to get at the typeahead */
+-extern	SIGRET_T rtfrmshell();	/* return from suspended shell */
+-#if BSD_4_2W
+-extern	SIGRET_T change_win_size();	/* change window size & redisplay */
+-#endif
++# endif /* BSD */
++#endif /* !HAVE_TERMIOS */
++#if BSD
++# include <sys/ioctl.h>	/* to get at the typeahead */
+ # define TBUFSIZ 128
+ char tobuf[TBUFSIZ];		/* terminal output buffer */
+ #endif /*BSD*/
+ 
++#ifdef SIGWINCH
++extern	SIGRET_T change_win_size();	/* change window size & redisplay */
++#endif
++#ifdef SIGTSTP
++extern	SIGRET_T rtfrmshell();	/* return from suspended shell */
++#endif
++
++#if USE_STTY_CMD
++#define STTYGMAX 512
++char sttyg[STTYGMAX+1];
++int sttygsiz;
++#endif
++
+ /*
+  * This function is called once to set up the terminal device streams.
+  */
+ ttopen()
+ {
+-#if	USG
++#if USE_STTY_CMD
++	FILE *f;
++#endif
++
++#if HAVE_TERMIOS
++	tcgetattr(0, &otermio);
++# if STRASSOK
++	ntermio = otermio;
++# else
++	(void)memcpy((void *)&ntermio, (void *)&otermio, sizeof(otermio));
++# endif
++	cfmakeraw(&ntermio);
++	 /* the below 2 lines are for OpenBSD 2.5 BUGS... */
++	ntermio.c_cc[VMIN] = 1;
++	ntermio.c_cc[VTIME] = 0;
++	tcsetattr(0, TCSADRAIN, &ntermio);
++#else /* !HAVE_TERMIOS */
++# if	USG
++#  ifndef TCGETS
+ 	ioctl(0, TCGETA, &otermio);	/* save old settings */
+-	ntermio.c_iflag = 0;		/* setup new settings */
++#  else
++	ioctl(0, TCGETS, &otermio);
++#  endif
++					/* setup new settings */
++#  if STRASSOK
++	ntermio = otermio;
++#  else
++	(void)memcpy((void *)&ntermio, (void *)&otermio, sizeof(otermio));
++#  endif 
++	ntermio.c_iflag = 0;		
+ 	ntermio.c_oflag = 0;
+-	ntermio.c_cflag = otermio.c_cflag;
+ 	ntermio.c_lflag = 0;
+-	ntermio.c_line = otermio.c_line;
+ 	ntermio.c_cc[VMIN] = 1;
+ 	ntermio.c_cc[VTIME] = 0;
++#  ifndef TCGETS
+ 	ioctl(0, TCSETAW, &ntermio);	/* and activate them */
+-#endif
++#  else
++	ioctl(0, TCSETSW, &ntermio);
++#  endif
++# endif /* USG */
+ 
+-#if	BSD
++# if	BSD
+ 	(void)gtty(0, &ostate);			/* save old state */
+ 	(void)gtty(0, &nstate);			/* get base of new state */
+ 	nstate.sg_flags |= RAW;
+@@ -59,15 +110,40 @@
+ 	(void)stty(0, &nstate);			/* set mode */
+ 	(void)ioctl(0, (int)TIOCGETC, (char *)&otchars); /* Save old characters */
+ 	(void)ioctl(0, (int)TIOCSETC, (char *)&ntchars); /* Place new character into K */
++# endif /* BSD */
++#endif /* !HAVE_TERMIOS */
++#if BSD
+ 	/* provide a smaller terminal output buffer so that
+ 	   the type ahead detection works better (more often) */
+ 	setbuffer(stdout, &tobuf[0], TBUFSIZ);
++#endif	/*BSD*/
++
++#if USE_STTY_CMD /* use stty command; added by N.Nide */
++	sttygsiz = 0; 
++	if(getenv("UUM_COUNTDOWN") != NULL &&
++	   NULL != (f = popen("exec stty -g", "r"))){
++		int c;
++
++		while(sttygsiz < STTYGMAX && EOF != (c = getc(f))){
++			sttyg[sttygsiz++] = c;
++		}
++		pclose(f);
++		if(sttygsiz > 0 && sttyg[sttygsiz - 1] == '\n')
++			sttygsiz--;
++		sttyg[sttygsiz] = '\0';
++		if(sttygsiz){
++			system("exec stty raw -echo -ixon lnext '^-'");
++		}
++	}
++#endif
++
++#ifdef SIGTSTP
+ 	(void)signal(SIGTSTP,SIG_DFL);		/* set signals so that we can */
+ 	(void)signal(SIGCONT,rtfrmshell);	/* suspend & restart emacs */
+-#if BSD_4_2W
++#endif
++#ifdef SIGWINCH
+ 	(void)signal(SIGWINCH,change_win_size);	/* change window size */
+ #endif
+-#endif	/*BSD*/
+ }
+ 
+ /*
+@@ -76,14 +152,37 @@
+  */
+ ttclose()
+ {
+-#if	USG
+-	ioctl(0, TCSETAW, &otermio);	/* restore terminal settings */
++#if USE_STTY_CMD
++	if(sttygsiz){
++		switch(fork()){
++		case -1:
++			break;
++		case 0:
++			execlp("stty", "stty", sttyg, NULL);
++			exit(-1);
++		default:
++			wait(NULL);
++			break;
++		}
++	}
+ #endif
+ 
+-#if	BSD
++#if HAVE_TERMIOS
++	tcsetattr(0, TCSADRAIN, &otermio);
++#else
++# if	USG
++#  ifndef TCGETS
++	ioctl(0, TCSETAW, &otermio);	/* restore terminal settings */
++#  else
++	ioctl(0, TCSETSW, &otermio);
++#  endif
++# endif /* USG */
++
++# if	BSD
+ 	(void)stty(0, &ostate);
+ 	(void)ioctl(0, (int)TIOCSETC, (char *)&otchars); /* Place old character into K */
+-#endif
++# endif /* BSD */
++#endif /* HAVE_TERMIOS */
+ }
+ 
+ /*
+@@ -134,13 +233,12 @@
+ */
+ typahead()
+ {
+-#if	BSD
++#ifdef FIONREAD
+ 	int x;	/* holds # of pending chars */
+ 
+ 	return((ioctl(0, (int)FIONREAD, (char *)&x) < 0) ? 0 : x);
+-#endif
+-#if	USG
++#else
+ 	return 0;
+-#endif	/*BSD*/
++#endif
+ }
+ #endif	/*TYPEAH*/
+diff -ruN kemacs-2.1k.orig/window.C_ kemacs-2.1k/window.C_
+--- kemacs-2.1k.orig/window.C_	1993-07-07 10:08:11.000000000 +0900
++++ kemacs-2.1k/window.C_	2012-11-25 00:37:11.000000000 +0900
+@@ -7,6 +7,22 @@
+ #include	"estruct.h"
+ #include	"edef.h"
+ 
++static makeid() /* make new window id */
++{
++	WINDOW	*wp, *wplast;
++	int	id;
++
++	for(id = 0, wp = wplast = wheadp; ; ){
++		if(id == wp->w_id){
++			id++;
++			wplast = wp;
++		}
++		wp = wp->w_wndp;
++		if(wp == NULL) wp = wheadp;
++		if(wp == wplast) return id;
++	}
++}
++
+ /*
+  * Reposition dot in the current window to line "n". If the argument is
+  * positive, it is that line. If it is negative it is that line from the
+@@ -27,7 +43,7 @@
+  * argument it recenters "." in the current window. Bound to "C-L".
+  */
+ /*ARGSUSED*/
+-refresh(f, n)
++refreshscr(f, n)
+ {
+     if (f == FALSE)
+ 	sgarbf = TRUE;
+@@ -318,7 +334,6 @@
+ 	register int	ntrd;
+ 	register WINDOW *wp1;
+ 	register WINDOW *wp2;
+-	char *malloc();
+ 
+ 	if (curwp->w_ntrows < 3) {
+ 		mlwrite(
+@@ -332,12 +347,13 @@
+ 	if ((wp = (WINDOW *) malloc(sizeof(WINDOW))) == NULL) {
+ 		mlwrite(
+ #if KMSGS
+-		    kterminal? CSTR("$B%&%#%s%I%&NN0h$r3dIU$1$G$-$^$;$s(J"):
++		    kterminal? CSTR("$B%&%#%s%I%&NN0h$r3d$jIU$1$G$-$^$;$s(J"):
+ #endif
+ 		    CSTR("Cannot allocate WINDOW block"));
+ 		return (FALSE);
+ 	}
+ 	++curbp->b_nwnd;			/* Displayed twice.	*/
++	wp->w_id = makeid();		/* Before making this current */
+ 	wp->w_bufp  = curbp;
+ 	wp->w_dotp  = curwp->w_dotp;
+ 	wp->w_doto  = curwp->w_doto;
+@@ -706,12 +722,12 @@
+ 	return(TRUE);
+ }
+ 
+-#if BSD_4_2W
+-# include	<signal.h>	 /* for stty/gtty functions */
+-
++#include	<signal.h>	 /* for stty/gtty functions */
++#ifdef SIGWINCH
+ /* change window size & redisplay */
++/* ARGSUSED */
+ SIGRET_T
+-change_win_size()
++change_win_size(SIGARG_T(dummy))
+ {
+ 	int row, col;
+ 
+diff -ruN kemacs-2.1k.orig/word.C_ kemacs-2.1k/word.C_
+--- kemacs-2.1k.orig/word.C_	1990-09-21 21:52:54.000000000 +0900
++++ kemacs-2.1k/word.C_	2012-11-25 10:45:04.000000000 +0900
+@@ -132,7 +132,7 @@
+ 		}
+ 		for (;;) {
+ 			c = lgetc(curwp->w_dotp, curwp->w_doto);
+-			if (islower(c)) {
++			if (isLower(c)) {
+ 				lputc(curwp->w_dotp, curwp->w_doto, CHCASE(c));
+ 				lchange(WFHARD);
+ 			}
+@@ -167,7 +167,7 @@
+ 		}
+ 		for (;;) {
+ 			c = lgetc(curwp->w_dotp, curwp->w_doto);
+-			if (isupper(c)) {
++			if (isUpper(c)) {
+ 				lputc(curwp->w_dotp, curwp->w_doto, CHCASE(c));
+ 				lchange(WFHARD);
+ 			}
+@@ -202,7 +202,7 @@
+ 				return (FALSE);
+ 		}
+ 		c = lgetc(curwp->w_dotp, curwp->w_doto);
+-		if (islower(c)) {
++		if (isLower(c)) {
+ 			lputc(curwp->w_dotp, curwp->w_doto, CHCASE(c));
+ 			lchange(WFHARD);
+ 		}
+@@ -210,7 +210,7 @@
+ 		    if (forwchar(FALSE, 1) == FALSE)
+ 			    return (FALSE);
+ 		    c = lgetc(curwp->w_dotp, curwp->w_doto);
+-		    if (isupper(c)) {
++		    if (isUpper(c)) {
+ 			lputc(curwp->w_dotp, curwp->w_doto, CHCASE(c));
+ 			lchange(WFHARD);
+ 		    }
+@@ -334,8 +334,7 @@
+ 	if (iseol())
+ 		return (FALSE);
+ 	c = lgetc(curwp->w_dotp, curwp->w_doto);
+-	if (isletter(c) ||
+-	    isdigit(c) ||
++	if (isAlpha(c) || isDigit(c) ||
+ #if KANJI
+ 	    (iskanji(c) && c != CCHR('$B!!(J')) ||
+ #endif
+@@ -510,7 +509,7 @@
+ 	if (fillcol == 0) {	/* no fill column set */
+ 		mlwrite(
+ #if KMSGS
+-		    kterminal? CSTR("$B%U%#%k$9$k%3%i%`$,%;%C%H$5$l$F$$$^$;$s(J"):
++		    kterminal? CSTR("$B%U%#%k$9$k%+%i%`$,%;%C%H$5$l$F$$$^$;$s(J"):
+ #endif
+ 		    CSTR("No fill column set"));
+ 		return(FALSE);
+@@ -679,7 +678,7 @@
+ 		}
+ 
+ 		/* and tabulate it */
+-		wordflag = (isletter(ch) || isdigit(ch) ||
++		wordflag = (isAlpha(ch) || isDigit(ch) ||
+ #if KANJI
+ 			    (iskanji(ch)) ||
+ #endif
+@@ -698,7 +697,7 @@
+ 
+ 	mlwrite(
+ #if KMSGS
+-	    kterminal? CSTR("%D $B8l(J %D $BJ8;z(J %d $B9T!!J?6Q#18l$"$?$j(J %f $BJ8;z(J"):
++	    kterminal? CSTR("%D $B8l(J %D $BJ8;z(J %d $B9T(J  $BJ?6Q(J1$B8l$"$?$j(J %f $BJ8;z(J"):
+ #endif
+ 	    CSTR("Words %D Chars %D Lines %d Avg chars/word %f"),
+ 		nwords, nchars, nlines + 1, avgch);

@@ -1,0 +1,81 @@
+diff -ruN kemacs-2.1k.orig/econfig.h kemacs-2.1k/econfig.h
+--- kemacs-2.1k.orig/econfig.h	2012-11-26 00:29:11.000000000 +0900
++++ kemacs-2.1k/econfig.h	2012-11-26 00:41:32.000000000 +0900
+@@ -11,7 +11,7 @@
+ #endif
+ 
+ /* OS definitions */
+-#define BSD		1	/* 1: BSD, 0: System V */
++#define BSD		0	/* 1: BSD, 0: System V */
+ #define BSD_LEGACY	0	/* old BSD (has bcopy() etc. instead
+ 				   of memcpy() etc.) */
+ /* compiler facility */
+@@ -41,7 +41,7 @@
+ 				   functions. (OpenBSD2.5 needs this)
+ 				   default is 1 under BSD, and 0 under SysV */
+ 
+-#define HAVE_INSTALL	BSD	/* have install command. default is 1 under
++#define HAVE_INSTALL	1	/* have install command. default is 1 under
+ 				   BSD, and 0 under SysV */
+ #define USE_GETCWD	1	/* if defined to 1, use getcwd(), and
+ 				   if defined to 0, use getwd() */
+@@ -61,12 +61,12 @@
+ /* if DEF_*_CODE is not defined, BINARY is assumed. */
+ /* KI/RI are only needed for JIS */
+ /* File code */
+-#define DEF_F_CODE	KS_UJIS		/* JIS/UJIS/SJIS/UTF8	*/
++#define DEF_F_CODE	KS_SJIS		/* JIS/UJIS/SJIS/UTF8	*/
+ #define DEF_F_KI	KS_NEWJIS	/* OLDJIS/NEWJIS	*/
+ #define DEF_F_RI	KS_ASCII	/* ROMAJI/ASCII/BOGUS	*/
+-#define DEF_F_EOL	KS_LF		/* LF/CR/CRLF		*/
++#define DEF_F_EOL	KS_CRLF		/* LF/CR/CRLF		*/
+ /* Terminal code */
+-#define DEF_T_CODE	KS_UJIS		/* JIS/UJIS/SJIS/UTF8	*/
++#define DEF_T_CODE	KS_SJIS		/* JIS/UJIS/SJIS/UTF8	*/
+ #define DEF_T_KI	KS_NEWJIS	/* OLDJIS/NEWJIS	*/
+ #define DEF_T_RI	KS_ASCII	/* ROMAJI/ASCII/BOGUS	*/
+ 
+diff -ruN kemacs-2.1k.orig/mf.c kemacs-2.1k/mf.c
+--- kemacs-2.1k.orig/mf.c	2012-11-26 00:29:11.000000000 +0900
++++ kemacs-2.1k/mf.c	2012-11-26 00:40:50.000000000 +0900
+@@ -7,7 +7,7 @@
+ 
+ /* name, location, owner, group, permission of binary */
+ PREFIX	      = /usr/local
+-PROGRAM	      = kemacs
++PROGRAM	      = kemacs.exe
+ DEST	      = $(PREFIX)/bin
+ OWNER         = root
+ GROUP         = staff
+@@ -49,8 +49,8 @@
+ 
+ /* location of include file */
+ #if HANDLE_UTF
+-EINCL	      = -I/usr/local/include	/* for iconv.h */
+-/*EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
++/*EINCL	      = -I/usr/local/include	/* for iconv.h */
++EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
+ #else
+ EINCL	      =
+ #endif /* EINCL is included in INCL */
+@@ -68,15 +68,17 @@
+ /*ELIBS	      = -ltermlib -lcompat	# FreeBSD */
+ #endif
+ #if USG_5_4
+-ELIBS         = -lcurses -lgen -lmalloc
++/*ELIBS         = -lcurses -lgen -lmalloc */
+ /*ELIBS	      = -lncurses		# Linux */
++/*ELIBS	      = -ltermcap		# legacy Cygwin (prior to 1.6?) */
++ELIBS	      = -lncurses		# Cygwin
+ #endif
+ 
+ /* iconv library */
+ #if HANDLE_UTF
+ /*ILIBS	      =					# with glibc (Linux) */
+-/*ILIBS	      = -liconv				# Cygwin? */
+-ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
++ILIBS	      = -liconv				# Cygwin? */
++/*ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
+ /*ILIBS	      = -liconv -L/usr/local/lib -R/usr/local/lib  # Solaris etc? */
+ #else
+ ILIBS	      =

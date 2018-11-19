@@ -1,0 +1,69 @@
+diff -ruN kemacs-2.1k.orig/econfig.h kemacs-2.1k/econfig.h
+--- kemacs-2.1k.orig/econfig.h	2012-11-26 00:29:11.000000000 +0900
++++ kemacs-2.1k/econfig.h	2012-11-26 00:33:06.000000000 +0900
+@@ -11,7 +11,7 @@
+ #endif
+ 
+ /* OS definitions */
+-#define BSD		1	/* 1: BSD, 0: System V */
++#define BSD		0	/* 1: BSD, 0: System V */
+ #define BSD_LEGACY	0	/* old BSD (has bcopy() etc. instead
+ 				   of memcpy() etc.) */
+ /* compiler facility */
+@@ -37,11 +37,11 @@
+ #define HAVE_REGEX	1	/* have POSIX regex */
+ #define USE_ENVSZ	0	/* use COLUMNS and LINES environment to
+ 				   determine screen size */
+-#define HAVE_TERMIOS	BSD	/* have termios struct and tc[sg]etattr
++#define HAVE_TERMIOS	1	/* have termios struct and tc[sg]etattr
+ 				   functions. (OpenBSD2.5 needs this)
+ 				   default is 1 under BSD, and 0 under SysV */
+ 
+-#define HAVE_INSTALL	BSD	/* have install command. default is 1 under
++#define HAVE_INSTALL	1	/* have install command. default is 1 under
+ 				   BSD, and 0 under SysV */
+ #define USE_GETCWD	1	/* if defined to 1, use getcwd(), and
+ 				   if defined to 0, use getwd() */
+diff -ruN kemacs-2.1k.orig/mf.c kemacs-2.1k/mf.c
+--- kemacs-2.1k.orig/mf.c	2012-11-26 00:29:11.000000000 +0900
++++ kemacs-2.1k/mf.c	2012-11-25 00:37:11.000000000 +0900
+@@ -10,7 +10,7 @@
+ PROGRAM	      = kemacs
+ DEST	      = $(PREFIX)/bin
+ OWNER         = root
+-GROUP         = staff
++GROUP	      = root
+ MODE	      = 755
+ /* name and location of manual */
+ MNAME	      = kemacs.1
+@@ -49,8 +49,8 @@
+ 
+ /* location of include file */
+ #if HANDLE_UTF
+-EINCL	      = -I/usr/local/include	/* for iconv.h */
+-/*EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
++/*EINCL	      = -I/usr/local/include	/* for iconv.h */
++EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
+ #else
+ EINCL	      =
+ #endif /* EINCL is included in INCL */
+@@ -68,15 +68,15 @@
+ /*ELIBS	      = -ltermlib -lcompat	# FreeBSD */
+ #endif
+ #if USG_5_4
+-ELIBS         = -lcurses -lgen -lmalloc
+-/*ELIBS	      = -lncurses		# Linux */
++/*ELIBS         = -lcurses -lgen -lmalloc */
++ELIBS	      = -lncurses		/* Linux */
+ #endif
+ 
+ /* iconv library */
+ #if HANDLE_UTF
+-/*ILIBS	      =					# with glibc (Linux) */
++ILIBS	      =					# with glibc (Linux) */
+ /*ILIBS	      = -liconv				# Cygwin? */
+-ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
++/*ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
+ /*ILIBS	      = -liconv -L/usr/local/lib -R/usr/local/lib  # Solaris etc? */
+ #else
+ ILIBS	      =

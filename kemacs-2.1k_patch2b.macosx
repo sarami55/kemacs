@@ -1,0 +1,78 @@
+diff -ruN kemacs-2.1k.orig/Makefile kemacs-2.1k/Makefile
+--- kemacs-2.1k.orig/Makefile	2012-11-26 14:14:43.005695238 +0900
++++ kemacs-2.1k/Makefile	2012-11-26 14:15:06.781514442 +0900
+@@ -4,7 +4,7 @@
+ 
+ SHELL=/bin/sh
+ # CC=clang -Wno-comment # with LLVM Clang
+-CC=cc
++CC=gcc
+ # This value of $(CC) is used ONLY when tailoring makefile.
+ # If you want to change the compiler for making kemacs itself,
+ # modify mf.c instead.
+diff -ruN kemacs-2.1k.orig/econfig.h kemacs-2.1k/econfig.h
+--- kemacs-2.1k.orig/econfig.h	2012-11-26 14:14:43.009695034 +0900
++++ kemacs-2.1k/econfig.h	2012-11-26 14:14:53.073619081 +0900
+@@ -61,12 +61,12 @@
+ /* if DEF_*_CODE is not defined, BINARY is assumed. */
+ /* KI/RI are only needed for JIS */
+ /* File code */
+-#define DEF_F_CODE	KS_UJIS		/* JIS/UJIS/SJIS/UTF8	*/
++#define DEF_F_CODE	KS_UTF8		/* JIS/UJIS/SJIS/UTF8	*/
+ #define DEF_F_KI	KS_NEWJIS	/* OLDJIS/NEWJIS	*/
+ #define DEF_F_RI	KS_ASCII	/* ROMAJI/ASCII/BOGUS	*/
+ #define DEF_F_EOL	KS_LF		/* LF/CR/CRLF		*/
+ /* Terminal code */
+-#define DEF_T_CODE	KS_UJIS		/* JIS/UJIS/SJIS/UTF8	*/
++#define DEF_T_CODE	KS_UTF8		/* JIS/UJIS/SJIS/UTF8	*/
+ #define DEF_T_KI	KS_NEWJIS	/* OLDJIS/NEWJIS	*/
+ #define DEF_T_RI	KS_ASCII	/* ROMAJI/ASCII/BOGUS	*/
+ 
+diff -ruN kemacs-2.1k.orig/mf.c kemacs-2.1k/mf.c
+--- kemacs-2.1k.orig/mf.c	2012-11-26 14:14:43.045694334 +0900
++++ kemacs-2.1k/mf.c	2012-11-26 14:15:51.273176080 +0900
+@@ -1,9 +1,10 @@
+ #include "econfig.h"
+ 
+ /*** configuration parameters ***/
+-CC	      = cc
++CC	      = gcc
+ /* CC	      = clang -Wno-parentheses -Wno-implicit-function-declaration \
+ 		-Wno-implicit-int -Wno-return-type /* with LLVM Clang */
++/* on recent MacOSX/Xcode, /usr/bin/cc is a symlink to clang */
+ 
+ /* name, location, owner, group, permission of binary */
+ PREFIX	      = /usr/local
+@@ -49,8 +50,8 @@
+ 
+ /* location of include file */
+ #if HANDLE_UTF
+-EINCL	      = -I/usr/local/include	/* for iconv.h */
+-/*EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
++/*EINCL	      = -I/usr/local/include	/* for iconv.h */
++EINCL	      =		# Some systems do not need above (Linux, Cygwin etc.) */
+ #else
+ EINCL	      =
+ #endif /* EINCL is included in INCL */
+@@ -64,8 +65,9 @@
+ /*ELIBS	      = -ltermcap -lPW		# termcap + System V */
+ /*ELIBS	      = -lcurses -lPW		# System V */
+ #if BSD
+-ELIBS	      = -ltermlib		/* BSD */
++/*ELIBS	      = -ltermlib		/* BSD */
+ /*ELIBS	      = -ltermlib -lcompat	# FreeBSD */
++ELIBS	      = -ltermcap		# MacOSX */
+ #endif
+ #if USG_5_4
+ ELIBS         = -lcurses -lgen -lmalloc
+@@ -75,8 +77,8 @@
+ /* iconv library */
+ #if HANDLE_UTF
+ /*ILIBS	      =					# with glibc (Linux) */
+-/*ILIBS	      = -liconv				# Cygwin? */
+-ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
++ILIBS	      = -liconv				# Cygwin/MacOSX? */
++/*ILIBS	      = -liconv -L/usr/local/lib	# BSD etc? */
+ /*ILIBS	      = -liconv -L/usr/local/lib -R/usr/local/lib  # Solaris etc? */
+ #else
+ ILIBS	      =
